@@ -41,17 +41,17 @@ func Run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 
 	var sched schedule.Scheduler
 	sched.Add(activityInterval, func(ctx context.Context, now time.Time) {
-		if err := collectAndSendActivity(ctx, bc, pg, logger, now); err != nil {
+		if err := collectAndSendActivity(ctx, bc, pg, now); err != nil {
 			logger.Error("activity snapshot failed", "error", err)
 		}
 	})
 	sched.Add(statementsInterval, func(ctx context.Context, now time.Time) {
-		if err := collectAndSendStatements(ctx, bc, pg, logger, now); err != nil {
+		if err := collectAndSendStatements(ctx, bc, pg, now); err != nil {
 			logger.Error("statement delta failed", "error", err)
 		}
 	})
 	sched.Add(healthInterval, func(ctx context.Context, now time.Time) {
-		if err := collectAndSendHealth(ctx, bc, pg, logger, now); err != nil {
+		if err := collectAndSendHealth(ctx, bc, pg, now); err != nil {
 			logger.Error("health check failed", "error", err)
 		}
 	})
@@ -114,7 +114,6 @@ func collectAndSendActivity(
 	ctx context.Context,
 	bc *backend.Client,
 	pg *postgres.Client,
-	logger *slog.Logger,
 	collectedAt time.Time,
 ) error {
 	snapshots, err := pg.CollectActivitySnapshots(ctx)
@@ -133,7 +132,6 @@ func collectAndSendStatements(
 	ctx context.Context,
 	bc *backend.Client,
 	pg *postgres.Client,
-	logger *slog.Logger,
 	collectedAt time.Time,
 ) error {
 	deltas, err := pg.CollectStatementDeltas(ctx)
@@ -152,7 +150,6 @@ func collectAndSendHealth(
 	ctx context.Context,
 	bc *backend.Client,
 	pg *postgres.Client,
-	logger *slog.Logger,
 	collectedAt time.Time,
 ) error {
 	databases, err := pg.CollectDatabaseNames(ctx)
