@@ -1,0 +1,40 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+
+# Editor/IDE
+.idea/
+.vscode/
+
+# AI
+.claude
+CLAUDE.md
+.serena
+
+# Dev Postgres log files tailed by the collector (the dir is kept via .gitkeep)
+dev/logs/*.log
+dev/logs/*.json
+
+# Build output
+dist/
+
+tmp/

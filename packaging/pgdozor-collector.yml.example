@@ -1,0 +1,20 @@
+# pgdozor collector configuration
+#
+# On first install, this file is copied to /etc/pgdozor-collector.yml
+# Edit that copy, then run: systemctl restart pgdozor-collector
+
+backend:
+  # Base URL of the pgdozor backend. HTTPS is required (HTTP is allowed only for a loopback host).
+  url: https://backend.example.com:3000
+
+  # Collector token issued by an admin. Authenticates this collector and identifies which server it reports as.
+  token: pgdc_CHANGE_ME
+
+# PostgreSQL connection DSN.
+postgres: postgresql://pgdozor_collector@localhost:5432/postgres
+
+# Tail the PostgreSQL jsonlog.
+logs:
+  path: /var/log/postgresql
+  # Let the collector delete old rotated .json files after a rotation switch, since PostgreSQL can't do it itself.
+  delete_rotated: true

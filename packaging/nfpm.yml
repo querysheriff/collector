@@ -1,0 +1,35 @@
+name: pgdozor-collector
+arch: ${ARCH}
+version: ${VERSION}
+section: database
+priority: optional
+maintainer: pgdozor <vladimir.kulikov@cdn77.com>
+description: PostgreSQL performance monitoring agent — samples stats views, tails jsonlog, and ships to the pgdozor backend.
+homepage: https://github.com/pgdozor/collector
+license: Proprietary
+
+depends:
+  - adduser # system user/group creation in the postinst.
+  - tzdata  # the collector loads the server's log_timezone at runtime (/usr/share/zoneinfo).
+
+contents:
+  - src: dist/pgdozor-collector-linux-amd64
+    dst: /usr/bin/pgdozor-collector
+    file_info:
+      mode: 0755
+
+  - src: packaging/debian/pgdozor-collector.service
+    dst: /lib/systemd/system/pgdozor-collector.service
+    file_info:
+      mode: 0644
+
+  - src: packaging/pgdozor-collector.yml.example
+    dst: /etc/pgdozor-collector.yml.example
+    type: config
+    file_info:
+      mode: 0644
+
+scripts:
+  postinstall: packaging/debian/postinst.sh
+  preremove: packaging/debian/prerm.sh
+  postremove: packaging/debian/postrm.sh

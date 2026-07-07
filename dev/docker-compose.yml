@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres:17
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements,auto_explain
+      - -c
+      - pg_stat_statements.track=top
+      - -c
+      - track_io_timing=on
+      - -c
+      - compute_query_id=on
+      - -c
+      - track_activity_query_size=4096
+      - -c
+      - logging_collector=on
+      - -c
+      - log_destination=jsonlog
+      - -c
+      - log_directory=/logs
+      - -c
+      - log_filename=postgresql.log
+      - -c
+      - log_rotation_age=0
+      - -c
+      - log_rotation_size=0
+      - -c
+      - log_timezone=UTC
+      - -c
+      - log_min_duration_statement=1000
+      - -c
+      - auto_explain.log_format=json
+      - -c
+      - auto_explain.log_min_duration=1000
+      - -c
+      - auto_explain.log_analyze=on
+      - -c
+      - auto_explain.log_buffers=on
+      - -c
+      - auto_explain.log_timing=on
+      - -c
+      - auto_explain.log_triggers=on
+      - -c
+      - auto_explain.log_verbose=on
+      - -c
+      - auto_explain.log_nested_statements=on
+      - -c
+      - auto_explain.sample_rate=1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - data:/var/lib/postgresql/data
+      - ./logs:/logs
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "PGPASSWORD=pgdozor_collector psql -U pgdozor_collector -d postgres -c 'SELECT 1' >/dev/null",
+        ]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  adminer:
+    image: adminer:5.4.2
+    ports:
+      - "8080:8080"
+
+volumes:
+  data:

@@ -1,0 +1,34 @@
+[Unit]
+Description=pgdozor collector — PostgreSQL performance monitoring agent
+Documentation=https://github.com/pgdozor/collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pgdozor-collector
+Group=pgdozor-collector
+ExecStart=/usr/bin/pgdozor-collector -config /etc/pgdozor-collector.yml
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+# Lets the collector delete rotated postgres-owned .json logs in their sticky log directory.
+CapabilityBoundingSet=CAP_FOWNER
+AmbientCapabilities=CAP_FOWNER
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+StateDirectory=pgdozor-collector
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

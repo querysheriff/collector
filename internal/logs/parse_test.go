@@ -1,0 +1,138 @@
+package logs_test
+
+import (
+	"testing"
+	"time"
+
+	pgdozorv1 "buf.build/gen/go/pgdozor/backend/protocolbuffers/go/pgdozor/v1"
+
+	"github.com/pgdozor/collector/internal/logs"
+)
+
+// 1. A full jsonlog record maps onto the ParsedLogEvent's fields, including the detail/hint/context/statement siblings.
+func TestParseFields(t *testing.T) {
+	t.Parallel()
+
+	p := logs.NewParser(time.UTC)
+	line := `{"timestamp":"2026-06-14 12:00:00.123 UTC","user":"app_user","dbname":"app_prod",` +
+		`"pid":15328,"error_severity":"ERROR","state_code":"23505",` +
+		`"application_name":"svc","backend_type":"client backend","query_id":123456789,` +
+		`"message":"duplicate key value","detail":"Key (id)=(1) already exists.",` +
+		`"hint":"check the key","context":"SQL function foo","statement":"INSERT INTO t VALUES (1)"}`
+
+	got, ok := p.Parse([]byte(line))
+	if !ok {
+		t.Fatalf("Parse ok=false for a valid jsonlog line")
+	}
+
+	wantTime := time.Date(2026, 6, 14, 12, 0, 0, 123_000_000, time.UTC)
+	if !got.OccurredAt.Equal(wantTime) {
+		t.Errorf("OccurredAt = %v, want %v", got.OccurredAt, wantTime)
+	}
+	checks := []struct {
+		name string
+		got  any
+		want any
+	}{
+		{"Pid", got.PID, int32(15328)},
+		{"Username", got.Username, "app_user"},
+		{"Database", got.DatabaseName, "app_prod"},
+		{"Application", got.ApplicationName, "svc"},
+		{"BackendType", got.BackendType, "client backend"},
+		{"StateCode", got.StateCode, "23505"},
+		{"QueryID", got.QueryID, int64(123456789)},
+		{"LogLevel", got.LogLevel, pgdozorv1.LogEvent_LOG_LEVEL_ERROR},
+		{"Message", got.Message, "duplicate key value"},
+		{"Detail", got.Detail, "Key (id)=(1) already exists."},
+		{"Hint", got.Hint, "check the key"},
+		{"Context", got.Context, "SQL function foo"},
+		{"Statement", got.Statement, "INSERT INTO t VALUES (1)"},
+	}
+	for _, c := range checks {
+		if c.got != c.want {
+			t.Errorf("%s = %v, want %v", c.name, c.got, c.want)
+		}
+	}
+}
+
+// 2. error_severity maps to the wire level; DEBUG1–DEBUG5 collapse to DEBUG; unknown becomes UNSPECIFIED.
+func TestParseSeverityMapping(t *testing.T) {
+	t.Parallel()
+
+	p := logs.NewParser(time.UTC)
+	cases := map[string]pgdozorv1.LogEvent_LogLevel{
+		"DEBUG1":  pgdozorv1.LogEvent_LOG_LEVEL_DEBUG,
+		"DEBUG5":  pgdozorv1.LogEvent_LOG_LEVEL_DEBUG,
+		"LOG":     pgdozorv1.LogEvent_LOG_LEVEL_LOG,
+		"INFO":    pgdozorv1.LogEvent_LOG_LEVEL_INFO,
+		"NOTICE":  pgdozorv1.LogEvent_LOG_LEVEL_NOTICE,
+		"WARNING": pgdozorv1.LogEvent_LOG_LEVEL_WARNING,
+		"ERROR":   pgdozorv1.LogEvent_LOG_LEVEL_ERROR,
+		"FATAL":   pgdozorv1.LogEvent_LOG_LEVEL_FATAL,
+		"PANIC":   pgdozorv1.LogEvent_LOG_LEVEL_PANIC,
+		"BOGUS":   pgdozorv1.LogEvent_LOG_LEVEL_UNSPECIFIED,
+	}
+	for severity, want := range cases {
+		line := `{"timestamp":"2026-06-14 12:00:00.000 UTC","pid":1,"error_severity":"` + severity + `","message":"x"}`
+		got, ok := p.Parse([]byte(line))
+		if !ok {
+			t.Errorf("Parse ok=false for severity %q", severity)
+
+			continue
+		}
+		if got.LogLevel != want {
+			t.Errorf("severity %q → level %v, want %v", severity, got.LogLevel, want)
+		}
+	}
+}
+
+// 3. The timestamp is interpreted in the configured timezone, not the printed zone abbreviation.
+func TestParseUsesConfiguredTimezone(t *testing.T) {
+	t.Parallel()
+
+	loc, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Skipf("timezone data unavailable: %v", err)
+	}
+
+	p := logs.NewParser(loc)
+	line := `{"timestamp":"2026-06-14 12:00:00.000 UTC","pid":1,"error_severity":"LOG","message":"x"}`
+
+	got, ok := p.Parse([]byte(line))
+	if !ok {
+		t.Fatalf("Parse ok=false")
+	}
+
+	// The printed "UTC" is dropped; the wall-clock time is read in loc.
+	want := time.Date(2026, 6, 14, 12, 0, 0, 0, loc)
+	if !got.OccurredAt.Equal(want) {
+		t.Errorf("OccurredAt = %v, want %v", got.OccurredAt, want)
+	}
+}
+
+// 4. A line that is not valid JSON is rejected (ok=false).
+func TestParseInvalidJSON(t *testing.T) {
+	t.Parallel()
+
+	p := logs.NewParser(time.UTC)
+	if _, ok := p.Parse([]byte("this is not json")); ok {
+		t.Errorf("Parse ok=true for a non-JSON line")
+	}
+	if _, ok := p.Parse([]byte(`{"timestamp":"2026-06-14 12:00:00.000 UTC"`)); ok {
+		t.Errorf("Parse ok=true for a truncated JSON line")
+	}
+}
+
+// 5. A malformed/absent timestamp yields the zero time rather than a parse failure.
+func TestParseMissingTimestamp(t *testing.T) {
+	t.Parallel()
+
+	p := logs.NewParser(time.UTC)
+	got, ok := p.Parse([]byte(`{"pid":1,"error_severity":"LOG","message":"no timestamp"}`))
+	if !ok {
+		t.Fatalf("Parse ok=false")
+	}
+	if !got.OccurredAt.IsZero() {
+		t.Errorf("OccurredAt = %v, want zero time", got.OccurredAt)
+	}
+}

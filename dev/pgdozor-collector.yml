@@ -1,0 +1,9 @@
+backend:
+  url: http://localhost:3000
+  token: pgdc_402MUek5w0PjR8fggjJdaDO2ug7
+
+postgres: postgresql://pgdozor_collector:pgdozor_collector@localhost:5432/postgres
+
+logs:
+  path: dev/logs
+  delete_rotated: false
