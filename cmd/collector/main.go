@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -38,9 +37,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// A cancelled context is a clean stop (e.g. SIGTERM during startup connect), not a failure.
-	if runErr := run(cfg, logger); runErr != nil && !errors.Is(runErr, context.Canceled) {
-		logger.Error("collector failed", "error", runErr)
+	if err := run(cfg, logger); err != nil {
+		logger.Error("collector failed", "error", err)
 		os.Exit(1)
 	}
 }
