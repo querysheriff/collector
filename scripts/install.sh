@@ -13,10 +13,12 @@ command -v dpkg >/dev/null 2>&1 || fail "this installer supports Debian-based sy
 
 if [ -r /etc/os-release ]; then
   # shellcheck source=/dev/null
-  . /etc/os-release
-  case "${ID:-}:${VERSION_ID:-}" in
+  os_id=$(. /etc/os-release; echo "${ID:-}")
+  os_version_id=$(. /etc/os-release; echo "${VERSION_ID:-}")
+  os_pretty=$(. /etc/os-release; echo "${PRETTY_NAME:-unknown}")
+  case "$os_id:$os_version_id" in
     debian:11|debian:12|debian:13) : ;;
-    *) echo "install: warning: tested on Debian 11-13, found ${PRETTY_NAME:-unknown}" >&2 ;;
+    *) echo "install: warning: tested on Debian 11-13, found $os_pretty" >&2 ;;
   esac
 fi
 
