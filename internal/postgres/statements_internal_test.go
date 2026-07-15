@@ -6,7 +6,7 @@ func TestCountersDecreased(t *testing.T) {
 	t.Parallel()
 
 	key := statementKey{databaseName: "app", userName: "u", queryID: 1}
-	base := statementCounters{calls: 10, rows: 20, totalExecTime: 30, sharedBlksRead: 40, tempBlksWritten: 50}
+	base := statementCounters{calls: 10, rows: 20, totalExecTime: 30, totalIOTime: 40}
 
 	lower := func(mutate func(*statementCounters)) map[statementKey]statementCounters {
 		c := base
@@ -24,8 +24,7 @@ func TestCountersDecreased(t *testing.T) {
 		{"calls decreased", lower(func(c *statementCounters) { c.calls-- }), true},
 		{"rows decreased", lower(func(c *statementCounters) { c.rows-- }), true},
 		{"exec time decreased", lower(func(c *statementCounters) { c.totalExecTime-- }), true},
-		{"shared blks decreased", lower(func(c *statementCounters) { c.sharedBlksRead-- }), true},
-		{"temp blks decreased", lower(func(c *statementCounters) { c.tempBlksWritten-- }), true},
+		{"io time decreased", lower(func(c *statementCounters) { c.totalIOTime-- }), true},
 		{
 			"new key only in cur is not a reset",
 			map[statementKey]statementCounters{

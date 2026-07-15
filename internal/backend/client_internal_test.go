@@ -117,15 +117,14 @@ func TestStatementDeltasToProto(t *testing.T) {
 	t.Parallel()
 
 	delta := postgres.StatementDelta{
-		UserName:        "app_user",
-		DatabaseName:    "app_prod",
-		QueryID:         123,
-		Query:           "SELECT 2",
-		Calls:           10,
-		Rows:            20,
-		TotalExecTime:   30.5,
-		SharedBlksRead:  40,
-		TempBlksWritten: 50,
+		UserName:      "app_user",
+		DatabaseName:  "app_prod",
+		QueryID:       123,
+		Query:         "SELECT 2",
+		Calls:         10,
+		Rows:          20,
+		TotalExecTime: 30.5,
+		TotalIOTime:   40.5,
 	}
 
 	p := statementDeltasToProto([]postgres.StatementDelta{delta})[0]
@@ -145,10 +144,8 @@ func TestStatementDeltasToProto(t *testing.T) {
 		t.Errorf("Rows = %d", p.GetRows())
 	case p.GetTotalExecTime() != 30.5:
 		t.Errorf("TotalExecTime = %v", p.GetTotalExecTime())
-	case p.GetSharedBlksRead() != 40:
-		t.Errorf("SharedBlksRead = %d", p.GetSharedBlksRead())
-	case p.GetTempBlksWritten() != 50:
-		t.Errorf("TempBlksWritten = %d", p.GetTempBlksWritten())
+	case p.GetTotalIoTime() != 40.5:
+		t.Errorf("TotalIoTime = %v", p.GetTotalIoTime())
 	}
 }
 

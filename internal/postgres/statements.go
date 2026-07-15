@@ -8,15 +8,14 @@ import (
 )
 
 type StatementDelta struct {
-	UserName        string
-	DatabaseName    string
-	QueryID         int64
-	Query           string
-	Calls           int64
-	Rows            int64
-	TotalExecTime   float64
-	SharedBlksRead  int64
-	TempBlksWritten int64
+	UserName      string
+	DatabaseName  string
+	QueryID       int64
+	Query         string
+	Calls         int64
+	Rows          int64
+	TotalExecTime float64
+	TotalIOTime   float64
 }
 
 type statementKey struct {
@@ -26,14 +25,25 @@ type statementKey struct {
 }
 
 type statementCounters struct {
-	calls           int64
-	rows            int64
-	totalExecTime   float64
-	sharedBlksRead  int64
-	tempBlksWritten int64
+	calls         int64
+	rows          int64
+	totalExecTime float64
+	totalIOTime   float64
 }
 
-const statementsSQL = `
+// blkTimeSplitVersionNum is the first server_version_num (PostgreSQL 17) where
+// pg_stat_statements splits block-IO timing into shared/local/temp columns.
+const blkTimeSplitVersionNum = 170000
+
+func statementsSQL(versionNum int) string {
+	ioTime := "(s.blk_read_time + s.blk_write_time)"
+	if versionNum >= blkTimeSplitVersionNum {
+		ioTime = "(s.shared_blk_read_time + s.shared_blk_write_time + " +
+			"s.local_blk_read_time + s.local_blk_write_time + " +
+			"s.temp_blk_read_time + s.temp_blk_write_time)"
+	}
+
+	return `
 SELECT r.rolname AS user_name,
        d.datname AS database_name,
        s.queryid,
@@ -41,8 +51,7 @@ SELECT r.rolname AS user_name,
        s.calls,
        s.rows,
        s.total_exec_time,
-       s.shared_blks_read,
-       s.temp_blks_written
+       ` + ioTime + ` AS total_io_time
 FROM pg_stat_statements s
 JOIN pg_database d ON d.oid = s.dbid
 JOIN pg_roles r ON r.oid = s.userid
@@ -52,9 +61,10 @@ WHERE r.rolname NOT ILIKE '%pgdozor%'
   AND s.queryid IS NOT NULL
   AND s.query IS NOT NULL;
 `
+}
 
 func (c *Client) CollectStatementDeltas(ctx context.Context) ([]StatementDelta, error) {
-	rows, err := c.pool.Query(ctx, statementsSQL)
+	rows, err := c.pool.Query(ctx, statementsSQL(c.VersionNum))
 	if err != nil {
 		return nil, fmt.Errorf("query pg_stat_statements: %w", err)
 	}
@@ -65,7 +75,7 @@ func (c *Client) CollectStatementDeltas(ctx context.Context) ([]StatementDelta, 
 		var s StatementDelta
 		if scanErr := rows.Scan(
 			&s.UserName, &s.DatabaseName, &s.QueryID, &s.Query, &s.Calls, &s.Rows, &s.TotalExecTime,
-			&s.SharedBlksRead, &s.TempBlksWritten,
+			&s.TotalIOTime,
 		); scanErr != nil {
 			return nil, fmt.Errorf("scan pg_stat_statements row: %w", scanErr)
 		}
@@ -82,11 +92,10 @@ func (c *Client) CollectStatementDeltas(ctx context.Context) ([]StatementDelta, 
 	newState := make(map[statementKey]statementCounters, len(cumulative))
 	for _, s := range cumulative {
 		newState[statementKey{s.DatabaseName, s.UserName, s.QueryID}] = statementCounters{
-			calls:           s.Calls,
-			rows:            s.Rows,
-			totalExecTime:   s.TotalExecTime,
-			sharedBlksRead:  s.SharedBlksRead,
-			tempBlksWritten: s.TempBlksWritten,
+			calls:         s.Calls,
+			rows:          s.Rows,
+			totalExecTime: s.TotalExecTime,
+			totalIOTime:   s.TotalIOTime,
 		}
 	}
 
@@ -103,8 +112,7 @@ func (c *Client) CollectStatementDeltas(ctx context.Context) ([]StatementDelta, 
 		s.Calls -= prev.calls
 		s.Rows -= prev.rows
 		s.TotalExecTime -= prev.totalExecTime
-		s.SharedBlksRead -= prev.sharedBlksRead
-		s.TempBlksWritten -= prev.tempBlksWritten
+		s.TotalIOTime -= prev.totalIOTime
 		if s.Calls > 0 {
 			deltas = append(deltas, s)
 		}
@@ -120,7 +128,7 @@ func countersDecreased(prev, cur map[statementKey]statementCounters) bool {
 			continue
 		}
 		if c.calls < p.calls || c.rows < p.rows || c.totalExecTime < p.totalExecTime ||
-			c.sharedBlksRead < p.sharedBlksRead || c.tempBlksWritten < p.tempBlksWritten {
+			c.totalIOTime < p.totalIOTime {
 			return true
 		}
 	}

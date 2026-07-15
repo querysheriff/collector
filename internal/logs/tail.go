@@ -53,7 +53,7 @@ type session struct {
 	// dir is the watched directory. The session always follows the newest .json file within it.
 	dir string
 
-	// deleteRotated removes older .json files after a rotation switch.
+	// deleteRotated removes older rotated .json/.log files after a rotation switch.
 	deleteRotated bool
 
 	cur     *follower.Follower
@@ -128,11 +128,11 @@ func (s *session) switchIfNewer(path string) {
 		return
 	}
 	if rotated {
-		s.deleteOlderJSONFiles()
+		s.deleteOlderRotatedFiles()
 	}
 }
 
-func (s *session) deleteOlderJSONFiles() {
+func (s *session) deleteOlderRotatedFiles() {
 	if !s.deleteRotated {
 		return
 	}
@@ -147,7 +147,7 @@ func (s *session) deleteOlderJSONFiles() {
 	curBase := filepath.Base(s.curPath)
 	for _, e := range entries {
 		name := e.Name()
-		if e.IsDir() || name == curBase || !isJSONLog(name) {
+		if e.IsDir() || name == curBase || !isRotatableLog(name) {
 			continue
 		}
 		info, infoErr := e.Info()
@@ -216,4 +216,10 @@ func (s *session) newest() (string, bool) {
 
 func isJSONLog(name string) bool {
 	return filepath.Ext(name) == ".json"
+}
+
+func isRotatableLog(name string) bool {
+	ext := filepath.Ext(name)
+
+	return ext == ".json" || ext == ".log"
 }

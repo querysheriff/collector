@@ -110,15 +110,14 @@ func statementDeltasToProto(deltas []postgres.StatementDelta) []*pgdozorv1.State
 	out := make([]*pgdozorv1.StatementDelta, 0, len(deltas))
 	for _, s := range deltas {
 		out = append(out, &pgdozorv1.StatementDelta{
-			UserName:        s.UserName,
-			DatabaseName:    s.DatabaseName,
-			QueryId:         s.QueryID,
-			Query:           s.Query,
-			Calls:           s.Calls,
-			Rows:            s.Rows,
-			TotalExecTime:   s.TotalExecTime,
-			SharedBlksRead:  s.SharedBlksRead,
-			TempBlksWritten: s.TempBlksWritten,
+			UserName:      s.UserName,
+			DatabaseName:  s.DatabaseName,
+			QueryId:       s.QueryID,
+			Query:         s.Query,
+			Calls:         s.Calls,
+			Rows:          s.Rows,
+			TotalExecTime: s.TotalExecTime,
+			TotalIoTime:   s.TotalIOTime,
 		})
 	}
 

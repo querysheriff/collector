@@ -1,7 +1,7 @@
-buf.build/gen/go/pgdozor/backend/connectrpc/go v1.20.0-20260704215323-69b97c87060d.1 h1:KBE4N+rT1TjqOYc9UcSg6I4icyCjXc+xfBZElsy4yls=
-buf.build/gen/go/pgdozor/backend/connectrpc/go v1.20.0-20260704215323-69b97c87060d.1/go.mod h1:HNJ2MApY+YrxLpfiMx8bXBPiJnxUx9ZtNCEnkNpjh74=
-buf.build/gen/go/pgdozor/backend/protocolbuffers/go v1.36.11-20260704215323-69b97c87060d.1 h1:djePT8MATRJIFCopltBebCg/JtDGbwH+NjBi419ChKw=
-buf.build/gen/go/pgdozor/backend/protocolbuffers/go v1.36.11-20260704215323-69b97c87060d.1/go.mod h1:dC/I05htciraTFlBMYyozVzkhgM7MrVZFFfnwvgC9YU=
+buf.build/gen/go/pgdozor/backend/connectrpc/go v1.20.0-20260715184200-723cabf3f4c3.1 h1:m9hRGCh6uFbNekxKzUUJ6K96r9c6x6RMUCwyL5G5S3I=
+buf.build/gen/go/pgdozor/backend/connectrpc/go v1.20.0-20260715184200-723cabf3f4c3.1/go.mod h1:o8d0Jbui3cljy4g2QdYTvAt3xeNHHRQ8Zcmt1E3b+ng=
+buf.build/gen/go/pgdozor/backend/protocolbuffers/go v1.36.11-20260715184200-723cabf3f4c3.1 h1:U2KAG94xoED/7Bfy4bOAzjrMRUcSaJK4g25RiVrsk2c=
+buf.build/gen/go/pgdozor/backend/protocolbuffers/go v1.36.11-20260715184200-723cabf3f4c3.1/go.mod h1:dC/I05htciraTFlBMYyozVzkhgM7MrVZFFfnwvgC9YU=
 connectrpc.com/connect v1.20.0 h1:6TNDAB+WeNd2uolWNlYczB5E0KNNaVMNUEx8JEUsPmQ=
 connectrpc.com/connect v1.20.0/go.mod h1:A2ygJrukXwWy32vkCAAHNVguZrqZ+jeZ9rGRnGR4dN4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

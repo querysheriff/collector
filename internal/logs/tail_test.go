@@ -274,3 +274,36 @@ func TestTailDirectoryDeletesRotatedFiles(t *testing.T) {
 		t.Errorf("c.json (current) should still exist, stat err = %v", err)
 	}
 }
+
+// 9. Deletion also removes the older .log files PostgreSQL emits alongside the
+// .json, even though the tailer only ever follows .json.
+func TestTailDirectoryDeletesRotatedLogFiles(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	oldJSON := filepath.Join(dir, "a.json")
+	oldLog := filepath.Join(dir, "a.log")
+	writeFile(t, oldJSON, "")
+	writeFile(t, oldLog, "")
+
+	now := time.Now().UTC()
+	setModTime(t, oldJSON, now.Add(-2*time.Minute)) // followed at startup
+	setModTime(t, oldLog, now.Add(-3*time.Minute))  // oldest
+
+	stream := startTailWith(t, dir, true)
+	time.Sleep(tailSettle)
+
+	b := filepath.Join(dir, "b.json")
+	writeFile(t, b, "")
+	time.Sleep(tailSettle)
+
+	appendToFile(t, b, "after rotation\n")
+	wantLine(t, stream, "after rotation")
+
+	if _, err := os.Stat(oldLog); !os.IsNotExist(err) {
+		t.Errorf("a.log should have been deleted, stat err = %v", err)
+	}
+	if _, err := os.Stat(b); err != nil {
+		t.Errorf("b.json (current) should still exist, stat err = %v", err)
+	}
+}
