@@ -23,6 +23,8 @@ github.com/jackc/puddle/v2 v2.2.2 h1:PR8nw+E/1w0GLuRFSmiioY6UooMp6KJv0/61nB7icHo
 github.com/jackc/puddle/v2 v2.2.2/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
 github.com/papertrail/go-tail v0.0.0-20221103124010-5087eb6a0a07 h1:LT8DNsrcjaqaKy/I2HTGjxRFazKu48G3AXoIXklcquw=
 github.com/papertrail/go-tail v0.0.0-20221103124010-5087eb6a0a07/go.mod h1:aUf8RteFEultHEEQ5zPUnFIs/hLoI2z8vJHmn0rcuEk=
+github.com/pgdozor/sqltags/go v0.0.1 h1:9HySBeHZNNkyoINbDRu375fzmEZPTDlX4obVlT0wRIc=
+github.com/pgdozor/sqltags/go v0.0.1/go.mod h1:06uQzl1y5wAgK/31y+29rVVufyX8jhQ5zCvht2yMVh8=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

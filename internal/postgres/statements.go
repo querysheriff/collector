@@ -79,7 +79,7 @@ func (c *Client) CollectStatementDeltas(ctx context.Context) ([]StatementDelta, 
 		); scanErr != nil {
 			return nil, fmt.Errorf("scan pg_stat_statements row: %w", scanErr)
 		}
-		_, s.Query = utils.ParseSQLTags(s.Query)
+		s.Query = utils.StripLeadingComments(s.Query)
 		if IsNoiseStatement(s.Query) {
 			continue
 		}

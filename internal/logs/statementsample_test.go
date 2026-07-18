@@ -297,7 +297,7 @@ func TestStatementSampleNoTags(t *testing.T) {
 	if got.StatementSample.Query != "SELECT 1" {
 		t.Errorf("Query = %q, want %q", got.StatementSample.Query, "SELECT 1")
 	}
-	if got.StatementSample.Tags != nil {
-		t.Errorf("Tags = %v, want nil", got.StatementSample.Tags)
+	if len(got.StatementSample.Tags) != 0 {
+		t.Errorf("Tags = %v, want none", got.StatementSample.Tags)
 	}
 }

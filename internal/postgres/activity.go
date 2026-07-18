@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pgdozor/collector/internal/utils"
+	sqltags "github.com/pgdozor/sqltags/go"
 )
 
 type ActivitySnapshot struct {
@@ -77,7 +77,7 @@ func (c *Client) CollectActivitySnapshots(ctx context.Context) ([]ActivitySnapsh
 			return nil, fmt.Errorf("scan pg_stat_activity row: %w", scanErr)
 		}
 		if s.Query != nil {
-			tags, stripped := utils.ParseSQLTags(*s.Query)
+			stripped, tags := sqltags.Untag(*s.Query)
 			s.QueryTags = tags
 			s.Query = &stripped
 		}

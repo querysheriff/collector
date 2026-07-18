@@ -10,6 +10,7 @@ require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/papertrail/go-tail v0.0.0-20221103124010-5087eb6a0a07
+	github.com/pgdozor/sqltags/go v0.0.1
 	google.golang.org/protobuf v1.36.11
 )
 

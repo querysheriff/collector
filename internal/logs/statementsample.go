@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pgdozor/collector/internal/utils"
+	sqltags "github.com/pgdozor/sqltags/go"
 )
 
 const paramValuePattern = `(?:(NULL)|'((?:[^']|'')*)')`
@@ -133,7 +133,7 @@ func (x *statementSampleExtractor) fromLogMinDuration(queryText, runtime, step, 
 }
 
 func attachTags(sample StatementSample) StatementSample {
-	sample.Tags, sample.Query = utils.ParseSQLTags(sample.Query)
+	sample.Query, sample.Tags = sqltags.Untag(sample.Query)
 
 	return sample
 }
