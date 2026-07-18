@@ -44,9 +44,7 @@ services:
       - -c
       - auto_explain.log_verbose=on
       - -c
-      - auto_explain.log_nested_statements=on
-      - -c
-      - auto_explain.sample_rate=1
+      - auto_explain.sample_rate=0.5
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

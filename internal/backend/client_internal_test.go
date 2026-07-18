@@ -117,10 +117,11 @@ func TestStatementDeltasToProto(t *testing.T) {
 	t.Parallel()
 
 	delta := postgres.StatementDelta{
-		UserName:      "app_user",
-		DatabaseName:  "app_prod",
-		QueryID:       123,
-		Query:         "SELECT 2",
+		StatementIdentity: postgres.StatementIdentity{
+			UserName:     "app_user",
+			DatabaseName: "app_prod",
+			QueryID:      123,
+		},
 		Calls:         10,
 		Rows:          20,
 		TotalExecTime: 30.5,
@@ -136,8 +137,6 @@ func TestStatementDeltasToProto(t *testing.T) {
 		t.Errorf("DatabaseName = %q", p.GetDatabaseName())
 	case p.GetQueryId() != 123:
 		t.Errorf("QueryId = %d", p.GetQueryId())
-	case p.GetQuery() != "SELECT 2":
-		t.Errorf("Query = %q", p.GetQuery())
 	case p.GetCalls() != 10:
 		t.Errorf("Calls = %d", p.GetCalls())
 	case p.GetRows() != 20:
@@ -146,6 +145,32 @@ func TestStatementDeltasToProto(t *testing.T) {
 		t.Errorf("TotalExecTime = %v", p.GetTotalExecTime())
 	case p.GetTotalIoTime() != 40.5:
 		t.Errorf("TotalIoTime = %v", p.GetTotalIoTime())
+	}
+}
+
+func TestStatementTextsToProto(t *testing.T) {
+	t.Parallel()
+
+	text := postgres.StatementText{
+		StatementIdentity: postgres.StatementIdentity{
+			UserName:     "app_user",
+			DatabaseName: "app_prod",
+			QueryID:      123,
+		},
+		Query: "SELECT * FROM users WHERE id = $1",
+	}
+
+	p := statementTextsToProto([]postgres.StatementText{text})[0]
+
+	switch {
+	case p.GetIdentity().GetUserName() != "app_user":
+		t.Errorf("UserName = %q", p.GetIdentity().GetUserName())
+	case p.GetIdentity().GetDatabaseName() != "app_prod":
+		t.Errorf("DatabaseName = %q", p.GetIdentity().GetDatabaseName())
+	case p.GetIdentity().GetQueryId() != 123:
+		t.Errorf("QueryId = %d", p.GetIdentity().GetQueryId())
+	case p.GetQuery() != "SELECT * FROM users WHERE id = $1":
+		t.Errorf("Query = %q", p.GetQuery())
 	}
 }
 

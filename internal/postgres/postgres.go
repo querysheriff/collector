@@ -25,7 +25,7 @@ type Client struct {
 	LogTimezone *time.Location
 
 	// cumulative pg_stat_statements counters from the previous collection, for computing deltas
-	statementsState map[statementKey]statementCounters
+	statementsState map[StatementIdentity]statementCounters
 }
 
 func Connect(ctx context.Context, dsn string) (*Client, error) {

@@ -93,17 +93,28 @@ func (c *Client) ReportStatements(
 	ctx context.Context,
 	collectedAt time.Time,
 	deltas []postgres.StatementDelta,
-) error {
+) ([]postgres.StatementIdentity, error) {
 	req := connect.NewRequest(&pgdozorv1.ReportStatementsRequest{
 		CollectedAt:     timestamppb.New(collectedAt),
 		StatementDeltas: statementDeltasToProto(deltas),
 	})
 
-	if _, err := c.statement.ReportStatements(ctx, req); err != nil {
-		return fmt.Errorf("report statements: %w", err)
+	resp, err := c.statement.ReportStatements(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("report statements: %w", err)
 	}
 
-	return nil
+	unknown := resp.Msg.GetUnknownStatements()
+	refs := make([]postgres.StatementIdentity, len(unknown))
+	for i, s := range unknown {
+		refs[i] = postgres.StatementIdentity{
+			UserName:     s.GetUserName(),
+			DatabaseName: s.GetDatabaseName(),
+			QueryID:      s.GetQueryId(),
+		}
+	}
+
+	return refs, nil
 }
 
 func statementDeltasToProto(deltas []postgres.StatementDelta) []*pgdozorv1.StatementDelta {
@@ -113,11 +124,38 @@ func statementDeltasToProto(deltas []postgres.StatementDelta) []*pgdozorv1.State
 			UserName:      s.UserName,
 			DatabaseName:  s.DatabaseName,
 			QueryId:       s.QueryID,
-			Query:         s.Query,
 			Calls:         s.Calls,
 			Rows:          s.Rows,
 			TotalExecTime: s.TotalExecTime,
 			TotalIoTime:   s.TotalIOTime,
+		})
+	}
+
+	return out
+}
+
+func (c *Client) ReportStatementTexts(ctx context.Context, texts []postgres.StatementText) error {
+	req := connect.NewRequest(&pgdozorv1.ReportStatementTextsRequest{
+		StatementTexts: statementTextsToProto(texts),
+	})
+
+	if _, err := c.statement.ReportStatementTexts(ctx, req); err != nil {
+		return fmt.Errorf("report statement texts: %w", err)
+	}
+
+	return nil
+}
+
+func statementTextsToProto(texts []postgres.StatementText) []*pgdozorv1.StatementText {
+	out := make([]*pgdozorv1.StatementText, 0, len(texts))
+	for _, t := range texts {
+		out = append(out, &pgdozorv1.StatementText{
+			Identity: &pgdozorv1.StatementIdentity{
+				UserName:     t.UserName,
+				DatabaseName: t.DatabaseName,
+				QueryId:      t.QueryID,
+			},
+			Query: t.Query,
 		})
 	}
 

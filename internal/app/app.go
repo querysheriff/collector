@@ -139,11 +139,25 @@ func collectAndSendStatements(
 		return err
 	}
 
-	if reportErr := bc.ReportStatements(ctx, collectedAt, deltas); reportErr != nil {
-		return reportErr
+	unknown, err := bc.ReportStatements(ctx, collectedAt, deltas)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	if len(unknown) == 0 {
+		return nil
+	}
+
+	texts, err := pg.CollectStatementTexts(ctx, unknown)
+	if err != nil {
+		return err
+	}
+
+	if len(texts) == 0 {
+		return nil
+	}
+
+	return bc.ReportStatementTexts(ctx, texts)
 }
 
 func collectAndSendHealth(
