@@ -9,7 +9,6 @@ const databasesSQL = `
 SELECT datname
 FROM pg_catalog.pg_database
 WHERE datistemplate = false
-AND datname NOT ILIKE '%pgdozor%'
 ORDER BY datname;
 `
 

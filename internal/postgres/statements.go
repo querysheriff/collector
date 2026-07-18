@@ -56,9 +56,7 @@ SELECT r.rolname AS user_name,
 FROM pg_stat_statements s
 JOIN pg_database d ON d.oid = s.dbid
 JOIN pg_roles r ON r.oid = s.userid
-WHERE r.rolname NOT ILIKE '%pgdozor%'
-  AND d.datname NOT ILIKE '%pgdozor%'
-  AND s.toplevel
+WHERE s.toplevel
   AND s.queryid IS NOT NULL
   AND s.query IS NOT NULL;
 `
