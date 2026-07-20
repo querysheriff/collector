@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 )
 
@@ -31,6 +30,8 @@ type Pipeline struct {
 	parser   *Parser
 	analyzer *Analyzer
 	reporter Reporter
+	breaker  selfBreaker
+	now      func() time.Time
 }
 
 func NewPipeline(
@@ -45,6 +46,7 @@ func NewPipeline(
 		parser:   NewParser(cfg.LogTimezone),
 		analyzer: NewAnalyzer(),
 		reporter: reporter,
+		now:      time.Now,
 	}
 }
 
@@ -61,7 +63,7 @@ func (p *Pipeline) Run(ctx context.Context) error {
 	return nil
 }
 
-// process parses each jsonlog line, drops the collector's own records, and classifies the rest.
+// process parses and classifies each jsonlog line.
 func (p *Pipeline) process(ctx context.Context, raw <-chan []byte) <-chan AnalyzedLogEvent {
 	out := make(chan AnalyzedLogEvent, logStreamBufferLen)
 
@@ -102,19 +104,15 @@ func (p *Pipeline) processLine(raw []byte) (AnalyzedLogEvent, bool) {
 	}
 
 	parsed, ok := p.parser.Parse(raw)
-	if !ok || isPgdozorRecord(parsed) {
+	if !ok {
+		return AnalyzedLogEvent{}, false
+	}
+
+	if !p.breaker.admit(p.now(), parsed, p.logger) {
 		return AnalyzedLogEvent{}, false
 	}
 
 	return p.analyzer.Analyze(parsed), true
-}
-
-func isPgdozorRecord(event ParsedLogEvent) bool {
-	return containsPgdozor(event.Username) || containsPgdozor(event.DatabaseName)
-}
-
-func containsPgdozor(s string) bool {
-	return strings.Contains(strings.ToLower(s), "pgdozor")
 }
 
 // batch accumulates analyzed events and, on each interval tick, sends them to the backend.

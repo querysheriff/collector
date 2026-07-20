@@ -51,8 +51,6 @@ SELECT a.pid,
 FROM pg_catalog.pg_stat_activity a
 LEFT JOIN pg_catalog.pg_locks l ON l.pid = a.pid AND l.granted = FALSE
 WHERE a.backend_type = 'client backend'
-  AND a.usename NOT ILIKE '%pgdozor%'
-  AND a.datname NOT ILIKE '%pgdozor%'
   AND a.state IN ('active', 'idle in transaction', 'idle in transaction (aborted)')
   AND a.xact_start IS NOT NULL
   AND a.xact_start <= clock_timestamp() - interval '1 second'

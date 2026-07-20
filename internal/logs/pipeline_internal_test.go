@@ -20,7 +20,7 @@ func newTestPipeline() *Pipeline {
 	)
 }
 
-func TestProcessLineSelfFilter(t *testing.T) {
+func TestProcessLinePassesRecords(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
@@ -34,19 +34,14 @@ func TestProcessLineSelfFilter(t *testing.T) {
 			true,
 		},
 		{
-			"pgdozor role dropped",
-			`{"user":"pgdozor_ro","dbname":"app","error_severity":"LOG","message":"statement: SELECT 1"}`,
-			false,
+			"pgdozor role now collected",
+			`{"user":"pgdozor","dbname":"app","error_severity":"LOG","message":"statement: SELECT 1"}`,
+			true,
 		},
 		{
-			"pgdozor database dropped",
+			"pgdozor database now collected",
 			`{"user":"app","dbname":"pgdozor","error_severity":"LOG","message":"statement: SELECT 1"}`,
-			false,
-		},
-		{
-			"pgdozor match is case-insensitive",
-			`{"user":"PgDozor","dbname":"app","error_severity":"LOG","message":"statement: SELECT 1"}`,
-			false,
+			true,
 		},
 		{
 			"invalid json dropped",
@@ -60,8 +55,7 @@ func TestProcessLineSelfFilter(t *testing.T) {
 			t.Parallel()
 
 			p := newTestPipeline()
-			_, emit := p.processLine([]byte(c.line))
-			if emit != c.wantEmit {
+			if _, emit := p.processLine([]byte(c.line)); emit != c.wantEmit {
 				t.Errorf("processLine emit = %v, want %v", emit, c.wantEmit)
 			}
 		})
