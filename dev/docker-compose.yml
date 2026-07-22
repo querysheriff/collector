@@ -59,7 +59,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "PGPASSWORD=pgdozor_collector psql -U pgdozor_collector -d postgres -c 'SELECT 1' >/dev/null",
+          "PGPASSWORD=querysheriff_collector psql -U querysheriff_collector -d postgres -c 'SELECT 1' >/dev/null",
         ]
       interval: 2s
       timeout: 2s

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	pgdozorv1 "buf.build/gen/go/pgdozor/backend/protocolbuffers/go/pgdozor/v1"
+	querysheriffv1 "buf.build/gen/go/querysheriff/backend/protocolbuffers/go/querysheriff/v1"
 )
 
 // jsonLogRecord mirrors the subset of jsonlog fields we consume.
@@ -68,28 +68,28 @@ func (p *Parser) Parse(line []byte) (ParsedLogEvent, bool) {
 
 // mapSeverity maps a jsonlog error_severity to the wire log level.
 // DEBUG1–DEBUG5 collapse to DEBUG; any unrecognized severity becomes UNSPECIFIED.
-func mapSeverity(severity string) pgdozorv1.LogEvent_LogLevel {
+func mapSeverity(severity string) querysheriffv1.LogEvent_LogLevel {
 	if strings.HasPrefix(severity, "DEBUG") {
-		return pgdozorv1.LogEvent_LOG_LEVEL_DEBUG
+		return querysheriffv1.LogEvent_LOG_LEVEL_DEBUG
 	}
 
 	switch severity {
 	case "INFO":
-		return pgdozorv1.LogEvent_LOG_LEVEL_INFO
+		return querysheriffv1.LogEvent_LOG_LEVEL_INFO
 	case "NOTICE":
-		return pgdozorv1.LogEvent_LOG_LEVEL_NOTICE
+		return querysheriffv1.LogEvent_LOG_LEVEL_NOTICE
 	case "WARNING":
-		return pgdozorv1.LogEvent_LOG_LEVEL_WARNING
+		return querysheriffv1.LogEvent_LOG_LEVEL_WARNING
 	case "ERROR":
-		return pgdozorv1.LogEvent_LOG_LEVEL_ERROR
+		return querysheriffv1.LogEvent_LOG_LEVEL_ERROR
 	case "LOG":
-		return pgdozorv1.LogEvent_LOG_LEVEL_LOG
+		return querysheriffv1.LogEvent_LOG_LEVEL_LOG
 	case "FATAL":
-		return pgdozorv1.LogEvent_LOG_LEVEL_FATAL
+		return querysheriffv1.LogEvent_LOG_LEVEL_FATAL
 	case "PANIC":
-		return pgdozorv1.LogEvent_LOG_LEVEL_PANIC
+		return querysheriffv1.LogEvent_LOG_LEVEL_PANIC
 	default:
-		return pgdozorv1.LogEvent_LOG_LEVEL_UNSPECIFIED
+		return querysheriffv1.LogEvent_LOG_LEVEL_UNSPECIFIED
 	}
 }
 

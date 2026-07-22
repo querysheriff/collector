@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	pgdozorv1 "buf.build/gen/go/pgdozor/backend/protocolbuffers/go/pgdozor/v1"
+	querysheriffv1 "buf.build/gen/go/querysheriff/backend/protocolbuffers/go/querysheriff/v1"
 
-	"github.com/pgdozor/collector/internal/logs"
+	"github.com/querysheriff/collector/internal/logs"
 )
 
 // A log_min_duration_statement line yields a statement sample with its duration.
@@ -17,7 +17,7 @@ func TestStatementSampleLogMinDuration(t *testing.T) {
 
 	got := logs.NewAnalyzer().Analyze(logs.ParsedLogEvent{Message: "duration: 1234.5 ms  statement: SELECT 1"})
 
-	if got.Classification != pgdozorv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_DURATION {
+	if got.Classification != querysheriffv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_DURATION {
 		t.Fatalf("classification = %v, want STATEMENT_DURATION", got.Classification)
 	}
 	if got.StatementSample == nil {
@@ -89,7 +89,7 @@ func TestStatementSampleSkipsBindStep(t *testing.T) {
 
 	got := logs.NewAnalyzer().Analyze(logs.ParsedLogEvent{Message: "duration: 1.0 ms  bind foo: SELECT $1"})
 
-	if got.Classification != pgdozorv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_DURATION {
+	if got.Classification != querysheriffv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_DURATION {
 		t.Errorf("classification = %v, want STATEMENT_DURATION", got.Classification)
 	}
 	if got.StatementSample != nil {
@@ -104,7 +104,7 @@ func TestStatementSampleAutoExplainJSON(t *testing.T) {
 	plan := `{"Query Text": "SELECT 1", "Plan": {"Node Type": "Result"}}`
 	got := logs.NewAnalyzer().Analyze(logs.ParsedLogEvent{Message: "duration: 5.234 ms  plan:\n" + plan})
 
-	if got.Classification != pgdozorv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_AUTO_EXPLAIN {
+	if got.Classification != querysheriffv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_AUTO_EXPLAIN {
 		t.Fatalf("classification = %v, want STATEMENT_AUTO_EXPLAIN", got.Classification)
 	}
 	if got.StatementSample == nil {
@@ -127,7 +127,7 @@ func TestStatementSampleAutoExplainText(t *testing.T) {
 		"Result  (cost=0.00..0.01 rows=1 width=4) (actual time=0.001..0.002 rows=1 loops=1)"
 	got := logs.NewAnalyzer().Analyze(logs.ParsedLogEvent{Message: plan})
 
-	if got.Classification != pgdozorv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_AUTO_EXPLAIN {
+	if got.Classification != querysheriffv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_AUTO_EXPLAIN {
 		t.Fatalf("classification = %v, want STATEMENT_AUTO_EXPLAIN", got.Classification)
 	}
 	if got.StatementSample == nil {
@@ -160,7 +160,7 @@ func TestStatementSampleMultilineExecuteWithParams(t *testing.T) {
 		Detail:  "Parameters: $1 = 'draft', $2 = 'tech', $3 = '100', $4 = '2', $5 = '50'",
 	})
 
-	if got.Classification != pgdozorv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_DURATION {
+	if got.Classification != querysheriffv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_DURATION {
 		t.Fatalf("classification = %v, want STATEMENT_DURATION", got.Classification)
 	}
 	if got.StatementSample == nil {
@@ -189,7 +189,7 @@ func TestStatementSampleMultilineAutoExplainJSON(t *testing.T) {
 		"}"
 	got := logs.NewAnalyzer().Analyze(logs.ParsedLogEvent{Message: "duration: 9652.075 ms  plan:\n" + plan})
 
-	if got.Classification != pgdozorv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_AUTO_EXPLAIN {
+	if got.Classification != querysheriffv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_AUTO_EXPLAIN {
 		t.Fatalf("classification = %v, want STATEMENT_AUTO_EXPLAIN", got.Classification)
 	}
 	if got.StatementSample == nil {
@@ -225,7 +225,7 @@ func TestStatementSampleMultilineStatement(t *testing.T) {
 		";"
 	got := logs.NewAnalyzer().Analyze(logs.ParsedLogEvent{Message: "duration: 9657.875 ms  statement: " + query})
 
-	if got.Classification != pgdozorv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_DURATION {
+	if got.Classification != querysheriffv1.LogEvent_LOG_CLASSIFICATION_STATEMENT_DURATION {
 		t.Fatalf("classification = %v, want STATEMENT_DURATION", got.Classification)
 	}
 	if got.StatementSample == nil {

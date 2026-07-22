@@ -1,14 +1,14 @@
 [Unit]
-Description=pgdozor collector — PostgreSQL performance monitoring agent
-Documentation=https://github.com/pgdozor/collector
+Description=querysheriff collector — PostgreSQL performance monitoring agent
+Documentation=https://github.com/querysheriff/collector
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=pgdozor-collector
-Group=pgdozor-collector
-ExecStart=/usr/bin/pgdozor-collector -config /etc/pgdozor-collector.yml
+User=querysheriff-collector
+Group=querysheriff-collector
+ExecStart=/usr/bin/querysheriff-collector -config /etc/querysheriff-collector.yml
 Restart=always
 RestartSec=5
 
@@ -27,7 +27,7 @@ RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 RestrictNamespaces=true
 LockPersonality=true
 MemoryDenyWriteExecute=true
-StateDirectory=pgdozor-collector
+StateDirectory=querysheriff-collector
 MemoryMax=512M
 
 [Install]

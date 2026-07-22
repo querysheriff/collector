@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pgdozor/collector/internal/logs"
-	"github.com/pgdozor/collector/internal/postgres"
+	"github.com/querysheriff/collector/internal/logs"
+	"github.com/querysheriff/collector/internal/postgres"
 )
 
 // A fully-populated activity snapshot maps every field onto its named proto field.

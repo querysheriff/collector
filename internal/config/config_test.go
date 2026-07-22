@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pgdozor/collector/internal/config"
+	"github.com/querysheriff/collector/internal/config"
 )
 
 func validConfig() config.Config {
 	return config.Config{
-		Backend:  config.BackendConfig{URL: "https://backend.example", Token: "pgdc_token"},
+		Backend:  config.BackendConfig{URL: "https://backend.example", Token: "qsc_token"},
 		Postgres: "postgres://localhost/db",
 	}
 }
@@ -51,14 +51,14 @@ func TestLoadValid(t *testing.T) {
 	t.Parallel()
 
 	path := filepath.Join(t.TempDir(), "collector.yml")
-	write(t, path, "backend:\n  url: https://backend.example\n  token: pgdc_token\n"+
+	write(t, path, "backend:\n  url: https://backend.example\n  token: qsc_token\n"+
 		"postgres: postgres://localhost/db\nlogs:\n  path: /var/log/pg\n  delete_rotated: true\n")
 
 	cfg, err := config.Load(path)
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if cfg.Backend.URL != "https://backend.example" || cfg.Backend.Token != "pgdc_token" {
+	if cfg.Backend.URL != "https://backend.example" || cfg.Backend.Token != "qsc_token" {
 		t.Errorf("backend = %+v", cfg.Backend)
 	}
 	if cfg.Logs.Path != "/var/log/pg" || !cfg.Logs.DeleteRotated {
@@ -70,7 +70,7 @@ func TestLoadRejectsUnknownKey(t *testing.T) {
 	t.Parallel()
 
 	path := filepath.Join(t.TempDir(), "collector.yml")
-	write(t, path, "backend:\n  url: https://backend.example\n  token: pgdc_token\n"+
+	write(t, path, "backend:\n  url: https://backend.example\n  token: qsc_token\n"+
 		"postgres: postgres://localhost/db\nlogz: oops\n")
 
 	if _, err := config.Load(path); err == nil {

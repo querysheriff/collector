@@ -9,15 +9,15 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/pgdozor/collector/internal/app"
-	"github.com/pgdozor/collector/internal/config"
+	"github.com/querysheriff/collector/internal/app"
+	"github.com/querysheriff/collector/internal/config"
 )
 
 var version = "dev"
 
 func main() {
 	var (
-		configPath  = flag.String("config", "/etc/pgdozor-collector.yml", "path to config file")
+		configPath  = flag.String("config", "/etc/querysheriff-collector.yml", "path to config file")
 		showVersion = flag.Bool("version", false, "print version and exit")
 	)
 	flag.Parse()

@@ -6,23 +6,23 @@ import (
 	"net/http"
 	"time"
 
-	"buf.build/gen/go/pgdozor/backend/connectrpc/go/pgdozor/v1/pgdozorv1connect"
-	pgdozorv1 "buf.build/gen/go/pgdozor/backend/protocolbuffers/go/pgdozor/v1"
+	"buf.build/gen/go/querysheriff/backend/connectrpc/go/querysheriff/v1/querysheriffv1connect"
+	querysheriffv1 "buf.build/gen/go/querysheriff/backend/protocolbuffers/go/querysheriff/v1"
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/pgdozor/collector/internal/config"
-	"github.com/pgdozor/collector/internal/logs"
-	"github.com/pgdozor/collector/internal/postgres"
+	"github.com/querysheriff/collector/internal/config"
+	"github.com/querysheriff/collector/internal/logs"
+	"github.com/querysheriff/collector/internal/postgres"
 )
 
 const requestTimeout = 10 * time.Second
 
 type Client struct {
-	activity  pgdozorv1connect.ActivityServiceClient
-	statement pgdozorv1connect.StatementServiceClient
-	log       pgdozorv1connect.LogServiceClient
-	health    pgdozorv1connect.HealthServiceClient
+	activity  querysheriffv1connect.ActivityServiceClient
+	statement querysheriffv1connect.StatementServiceClient
+	log       querysheriffv1connect.LogServiceClient
+	health    querysheriffv1connect.HealthServiceClient
 }
 
 func NewClient(cfg config.Config) *Client {
@@ -30,10 +30,10 @@ func NewClient(cfg config.Config) *Client {
 	auth := connect.WithInterceptors(authInterceptor(cfg.Backend.Token))
 
 	return &Client{
-		activity:  pgdozorv1connect.NewActivityServiceClient(httpClient, cfg.Backend.URL, auth),
-		statement: pgdozorv1connect.NewStatementServiceClient(httpClient, cfg.Backend.URL, auth),
-		log:       pgdozorv1connect.NewLogServiceClient(httpClient, cfg.Backend.URL, auth),
-		health:    pgdozorv1connect.NewHealthServiceClient(httpClient, cfg.Backend.URL, auth),
+		activity:  querysheriffv1connect.NewActivityServiceClient(httpClient, cfg.Backend.URL, auth),
+		statement: querysheriffv1connect.NewStatementServiceClient(httpClient, cfg.Backend.URL, auth),
+		log:       querysheriffv1connect.NewLogServiceClient(httpClient, cfg.Backend.URL, auth),
+		health:    querysheriffv1connect.NewHealthServiceClient(httpClient, cfg.Backend.URL, auth),
 	}
 }
 
@@ -51,7 +51,7 @@ func (c *Client) ReportActivity(
 	collectedAt time.Time,
 	snapshots []postgres.ActivitySnapshot,
 ) error {
-	req := connect.NewRequest(&pgdozorv1.ReportActivityRequest{
+	req := connect.NewRequest(&querysheriffv1.ReportActivityRequest{
 		CollectedAt:       timestamppb.New(collectedAt),
 		ActivitySnapshots: activitySnapshotsToProto(snapshots),
 	})
@@ -63,10 +63,10 @@ func (c *Client) ReportActivity(
 	return nil
 }
 
-func activitySnapshotsToProto(snapshots []postgres.ActivitySnapshot) []*pgdozorv1.ActivitySnapshot {
-	out := make([]*pgdozorv1.ActivitySnapshot, 0, len(snapshots))
+func activitySnapshotsToProto(snapshots []postgres.ActivitySnapshot) []*querysheriffv1.ActivitySnapshot {
+	out := make([]*querysheriffv1.ActivitySnapshot, 0, len(snapshots))
 	for _, s := range snapshots {
-		out = append(out, &pgdozorv1.ActivitySnapshot{
+		out = append(out, &querysheriffv1.ActivitySnapshot{
 			Pid:             s.PID,
 			BackendStart:    timestamppb.New(s.BackendStart),
 			DatabaseName:    deref(s.DatabaseName),
@@ -94,7 +94,7 @@ func (c *Client) ReportStatements(
 	collectedAt time.Time,
 	deltas []postgres.StatementDelta,
 ) ([]postgres.StatementIdentity, error) {
-	req := connect.NewRequest(&pgdozorv1.ReportStatementsRequest{
+	req := connect.NewRequest(&querysheriffv1.ReportStatementsRequest{
 		CollectedAt:     timestamppb.New(collectedAt),
 		StatementDeltas: statementDeltasToProto(deltas),
 	})
@@ -117,10 +117,10 @@ func (c *Client) ReportStatements(
 	return refs, nil
 }
 
-func statementDeltasToProto(deltas []postgres.StatementDelta) []*pgdozorv1.StatementDelta {
-	out := make([]*pgdozorv1.StatementDelta, 0, len(deltas))
+func statementDeltasToProto(deltas []postgres.StatementDelta) []*querysheriffv1.StatementDelta {
+	out := make([]*querysheriffv1.StatementDelta, 0, len(deltas))
 	for _, s := range deltas {
-		out = append(out, &pgdozorv1.StatementDelta{
+		out = append(out, &querysheriffv1.StatementDelta{
 			UserName:      s.UserName,
 			DatabaseName:  s.DatabaseName,
 			QueryId:       s.QueryID,
@@ -135,7 +135,7 @@ func statementDeltasToProto(deltas []postgres.StatementDelta) []*pgdozorv1.State
 }
 
 func (c *Client) ReportStatementTexts(ctx context.Context, texts []postgres.StatementText) error {
-	req := connect.NewRequest(&pgdozorv1.ReportStatementTextsRequest{
+	req := connect.NewRequest(&querysheriffv1.ReportStatementTextsRequest{
 		StatementTexts: statementTextsToProto(texts),
 	})
 
@@ -146,11 +146,11 @@ func (c *Client) ReportStatementTexts(ctx context.Context, texts []postgres.Stat
 	return nil
 }
 
-func statementTextsToProto(texts []postgres.StatementText) []*pgdozorv1.StatementText {
-	out := make([]*pgdozorv1.StatementText, 0, len(texts))
+func statementTextsToProto(texts []postgres.StatementText) []*querysheriffv1.StatementText {
+	out := make([]*querysheriffv1.StatementText, 0, len(texts))
 	for _, t := range texts {
-		out = append(out, &pgdozorv1.StatementText{
-			Identity: &pgdozorv1.StatementIdentity{
+		out = append(out, &querysheriffv1.StatementText{
+			Identity: &querysheriffv1.StatementIdentity{
 				UserName:     t.UserName,
 				DatabaseName: t.DatabaseName,
 				QueryId:      t.QueryID,
@@ -167,7 +167,7 @@ func (c *Client) ReportLogs(
 	collectedAt time.Time,
 	logEvents []logs.AnalyzedLogEvent,
 ) error {
-	req := connect.NewRequest(&pgdozorv1.ReportLogsRequest{
+	req := connect.NewRequest(&querysheriffv1.ReportLogsRequest{
 		CollectedAt: timestamppb.New(collectedAt),
 		LogEvents:   logEventsToProto(logEvents),
 	})
@@ -179,11 +179,11 @@ func (c *Client) ReportLogs(
 	return nil
 }
 
-func logEventsToProto(events []logs.AnalyzedLogEvent) []*pgdozorv1.LogEvent {
-	out := make([]*pgdozorv1.LogEvent, 0, len(events))
+func logEventsToProto(events []logs.AnalyzedLogEvent) []*querysheriffv1.LogEvent {
+	out := make([]*querysheriffv1.LogEvent, 0, len(events))
 	for i := range events {
 		e := &events[i] // don't copy the large event
-		out = append(out, &pgdozorv1.LogEvent{
+		out = append(out, &querysheriffv1.LogEvent{
 			OccurredAt:      timestampFromTime(e.OccurredAt),
 			LogLevel:        e.LogLevel,
 			Classification:  e.Classification,
@@ -206,12 +206,12 @@ func logEventsToProto(events []logs.AnalyzedLogEvent) []*pgdozorv1.LogEvent {
 	return out
 }
 
-func statementSampleToProto(e *logs.AnalyzedLogEvent) *pgdozorv1.LogStatementSample {
+func statementSampleToProto(e *logs.AnalyzedLogEvent) *querysheriffv1.LogStatementSample {
 	if e.StatementSample == nil {
 		return nil
 	}
 
-	return &pgdozorv1.LogStatementSample{
+	return &querysheriffv1.LogStatementSample{
 		OccurredAt:      timestampFromTime(e.OccurredAt),
 		Query:           e.StatementSample.Query,
 		DurationMs:      e.StatementSample.DurationMs,
@@ -226,7 +226,7 @@ func (c *Client) ReportHealth(
 	collectedAt time.Time,
 	databases []string,
 ) error {
-	req := connect.NewRequest(&pgdozorv1.ReportHealthRequest{
+	req := connect.NewRequest(&querysheriffv1.ReportHealthRequest{
 		CollectedAt: timestamppb.New(collectedAt),
 		Databases:   databases,
 	})

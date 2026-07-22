@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pgdozor/collector/internal/backend"
-	"github.com/pgdozor/collector/internal/config"
-	"github.com/pgdozor/collector/internal/logs"
-	"github.com/pgdozor/collector/internal/postgres"
-	"github.com/pgdozor/collector/internal/schedule"
+	"github.com/querysheriff/collector/internal/backend"
+	"github.com/querysheriff/collector/internal/config"
+	"github.com/querysheriff/collector/internal/logs"
+	"github.com/querysheriff/collector/internal/postgres"
+	"github.com/querysheriff/collector/internal/schedule"
 )
 
 const (
@@ -28,7 +28,7 @@ func Run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	}
 	defer pg.Close()
 
-	logger.Info("pgdozor collector started",
+	logger.Info("querysheriff collector started",
 		"postgres_version_num", pg.VersionNum,
 	)
 

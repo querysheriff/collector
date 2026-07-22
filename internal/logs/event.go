@@ -3,12 +3,12 @@ package logs
 import (
 	"time"
 
-	pgdozorv1 "buf.build/gen/go/pgdozor/backend/protocolbuffers/go/pgdozor/v1"
+	querysheriffv1 "buf.build/gen/go/querysheriff/backend/protocolbuffers/go/querysheriff/v1"
 )
 
 type ParsedLogEvent struct {
 	OccurredAt      time.Time
-	LogLevel        pgdozorv1.LogEvent_LogLevel
+	LogLevel        querysheriffv1.LogEvent_LogLevel
 	PID             int32
 	Username        string
 	DatabaseName    string
@@ -26,7 +26,7 @@ type ParsedLogEvent struct {
 type AnalyzedLogEvent struct {
 	ParsedLogEvent
 
-	Classification  pgdozorv1.LogEvent_LogClassification
+	Classification  querysheriffv1.LogEvent_LogClassification
 	StatementSample *StatementSample
 }
 

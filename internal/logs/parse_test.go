@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	pgdozorv1 "buf.build/gen/go/pgdozor/backend/protocolbuffers/go/pgdozor/v1"
+	querysheriffv1 "buf.build/gen/go/querysheriff/backend/protocolbuffers/go/querysheriff/v1"
 
-	"github.com/pgdozor/collector/internal/logs"
+	"github.com/querysheriff/collector/internal/logs"
 )
 
 // 1. A full jsonlog record maps onto the ParsedLogEvent's fields, including the detail/hint/context/statement siblings.
@@ -41,7 +41,7 @@ func TestParseFields(t *testing.T) {
 		{"BackendType", got.BackendType, "client backend"},
 		{"StateCode", got.StateCode, "23505"},
 		{"QueryID", got.QueryID, int64(123456789)},
-		{"LogLevel", got.LogLevel, pgdozorv1.LogEvent_LOG_LEVEL_ERROR},
+		{"LogLevel", got.LogLevel, querysheriffv1.LogEvent_LOG_LEVEL_ERROR},
 		{"Message", got.Message, "duplicate key value"},
 		{"Detail", got.Detail, "Key (id)=(1) already exists."},
 		{"Hint", got.Hint, "check the key"},
@@ -60,17 +60,17 @@ func TestParseSeverityMapping(t *testing.T) {
 	t.Parallel()
 
 	p := logs.NewParser(time.UTC)
-	cases := map[string]pgdozorv1.LogEvent_LogLevel{
-		"DEBUG1":  pgdozorv1.LogEvent_LOG_LEVEL_DEBUG,
-		"DEBUG5":  pgdozorv1.LogEvent_LOG_LEVEL_DEBUG,
-		"LOG":     pgdozorv1.LogEvent_LOG_LEVEL_LOG,
-		"INFO":    pgdozorv1.LogEvent_LOG_LEVEL_INFO,
-		"NOTICE":  pgdozorv1.LogEvent_LOG_LEVEL_NOTICE,
-		"WARNING": pgdozorv1.LogEvent_LOG_LEVEL_WARNING,
-		"ERROR":   pgdozorv1.LogEvent_LOG_LEVEL_ERROR,
-		"FATAL":   pgdozorv1.LogEvent_LOG_LEVEL_FATAL,
-		"PANIC":   pgdozorv1.LogEvent_LOG_LEVEL_PANIC,
-		"BOGUS":   pgdozorv1.LogEvent_LOG_LEVEL_UNSPECIFIED,
+	cases := map[string]querysheriffv1.LogEvent_LogLevel{
+		"DEBUG1":  querysheriffv1.LogEvent_LOG_LEVEL_DEBUG,
+		"DEBUG5":  querysheriffv1.LogEvent_LOG_LEVEL_DEBUG,
+		"LOG":     querysheriffv1.LogEvent_LOG_LEVEL_LOG,
+		"INFO":    querysheriffv1.LogEvent_LOG_LEVEL_INFO,
+		"NOTICE":  querysheriffv1.LogEvent_LOG_LEVEL_NOTICE,
+		"WARNING": querysheriffv1.LogEvent_LOG_LEVEL_WARNING,
+		"ERROR":   querysheriffv1.LogEvent_LOG_LEVEL_ERROR,
+		"FATAL":   querysheriffv1.LogEvent_LOG_LEVEL_FATAL,
+		"PANIC":   querysheriffv1.LogEvent_LOG_LEVEL_PANIC,
+		"BOGUS":   querysheriffv1.LogEvent_LOG_LEVEL_UNSPECIFIED,
 	}
 	for severity, want := range cases {
 		line := `{"timestamp":"2026-06-14 12:00:00.000 UTC","pid":1,"error_severity":"` + severity + `","message":"x"}`

@@ -2,12 +2,12 @@
 
 set -e
 
-SVC_USER=pgdozor-collector
-SVC_GROUP=pgdozor-collector
-HOME_DIR=/var/lib/pgdozor-collector
-CONF=/etc/pgdozor-collector.yml
-EXAMPLE=/etc/pgdozor-collector.yml.example
-SERVICE=pgdozor-collector.service
+SVC_USER=querysheriff-collector
+SVC_GROUP=querysheriff-collector
+HOME_DIR=/var/lib/querysheriff-collector
+CONF=/etc/querysheriff-collector.yml
+EXAMPLE=/etc/querysheriff-collector.yml.example
+SERVICE=querysheriff-collector.service
 
 case "$1" in
   configure)
@@ -44,7 +44,7 @@ if [ -d /run/systemd/system ]; then
     # Upgrade ($2 = old version): restart only if it was already running.
     systemctl try-restart "$SERVICE" || true
   else
-    echo "pgdozor-collector installed. Edit $CONF, then: systemctl start $SERVICE"
+    echo "querysheriff-collector installed. Edit $CONF, then: systemctl start $SERVICE"
   fi
 fi
 

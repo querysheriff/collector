@@ -2,7 +2,7 @@
 
 set -e
 
-SERVICE=pgdozor-collector.service
+SERVICE=querysheriff-collector.service
 
 case "$1" in
   remove)
@@ -12,14 +12,14 @@ case "$1" in
     fi
     ;;
   purge)
-    rm -f /etc/pgdozor-collector.yml /etc/pgdozor-collector.yml.example
-    rm -rf /var/lib/pgdozor-collector
+    rm -f /etc/querysheriff-collector.yml /etc/querysheriff-collector.yml.example
+    rm -rf /var/lib/querysheriff-collector
 
-    if getent passwd pgdozor-collector >/dev/null 2>&1; then
-      deluser --system --quiet pgdozor-collector || true
+    if getent passwd querysheriff-collector >/dev/null 2>&1; then
+      deluser --system --quiet querysheriff-collector || true
     fi
-    if getent group pgdozor-collector >/dev/null 2>&1; then
-      delgroup --system --quiet pgdozor-collector || true
+    if getent group querysheriff-collector >/dev/null 2>&1; then
+      delgroup --system --quiet querysheriff-collector || true
     fi
 
     if [ -d /run/systemd/system ]; then

@@ -2,8 +2,8 @@
 
 set -eu
 
-REPO="pgdozor/collector"
-SERVICE="pgdozor-collector"
+REPO="querysheriff/collector"
+SERVICE="querysheriff-collector"
 
 fail() { echo "install: $1" >&2; exit 1; }
 
@@ -35,7 +35,7 @@ else
 fi
 VER="${TAG#v}"
 
-DEB="pgdozor-collector_${VER}_${ARCH}.deb"
+DEB="querysheriff-collector_${VER}_${ARCH}.deb"
 URL="https://github.com/$REPO/releases/download/${TAG}/${DEB}"
 
 TMP=$(mktemp -d)
@@ -53,10 +53,10 @@ fi
 
 cat <<EOF
 
-pgdozor-collector installed.
+querysheriff-collector installed.
 
 Next steps:
-  1. Edit the config:   /etc/pgdozor-collector.yml
+  1. Edit the config:   /etc/querysheriff-collector.yml
   2. Start the service: systemctl start $SERVICE
   3. Check it:          systemctl status $SERVICE
                         journalctl -u $SERVICE -f

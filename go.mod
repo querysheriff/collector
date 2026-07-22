@@ -1,16 +1,16 @@
-module github.com/pgdozor/collector
+module github.com/querysheriff/collector
 
 go 1.26.3
 
 require (
-	buf.build/gen/go/pgdozor/backend/connectrpc/go v1.20.0-20260718151001-5a7e4c1d06ea.1
-	buf.build/gen/go/pgdozor/backend/protocolbuffers/go v1.36.11-20260718151001-5a7e4c1d06ea.1
+	buf.build/gen/go/querysheriff/backend/connectrpc/go v1.20.0-20260718151001-5a7e4c1d06ea.1
+	buf.build/gen/go/querysheriff/backend/protocolbuffers/go v1.36.11-20260718151001-5a7e4c1d06ea.1
 	connectrpc.com/connect v1.20.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/goccy/go-yaml v1.19.2
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/papertrail/go-tail v0.0.0-20221103124010-5087eb6a0a07
-	github.com/pgdozor/sqltags/go v0.0.1
+	github.com/querysheriff/sqltags/go v0.0.2
 	google.golang.org/protobuf v1.36.11
 )
 

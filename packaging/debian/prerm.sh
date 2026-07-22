@@ -2,7 +2,7 @@
 
 set -e
 
-SERVICE=pgdozor-collector.service
+SERVICE=querysheriff-collector.service
 
 case "$1" in
   remove|deconfigure)

@@ -12,7 +12,7 @@ const (
 	selfSuspension     = 5 * time.Minute
 )
 
-// selfBreaker pauses pgdozor's own logs on a burst, so they can't loop: storing
+// selfBreaker pauses querysheriff's own logs on a burst, so they can't loop: storing
 // a log on the monitored server can make Postgres log it, which gets stored again.
 type selfBreaker struct {
 	windowStart    time.Time
@@ -21,10 +21,10 @@ type selfBreaker struct {
 	suspendedUntil time.Time
 }
 
-// admit reports whether the record may be collected; pgdozor's own logs are
+// admit reports whether the record may be collected; querysheriff's own logs are
 // dropped while suspended, everything else always passes.
 func (b *selfBreaker) admit(now time.Time, event ParsedLogEvent, logger *slog.Logger) bool {
-	if !isPgdozorRecord(event) {
+	if !isQuerySheriffRecord(event) {
 		return true
 	}
 
@@ -36,7 +36,7 @@ func (b *selfBreaker) admit(now time.Time, event ParsedLogEvent, logger *slog.Lo
 		b.suspended = false
 		b.windowStart = now
 		b.count = 1
-		logger.Info("resuming collection of pgdozor logs after burst suspension")
+		logger.Info("resuming collection of querysheriff logs after burst suspension")
 
 		return true
 	}
@@ -51,7 +51,7 @@ func (b *selfBreaker) admit(now time.Time, event ParsedLogEvent, logger *slog.Lo
 		b.suspended = true
 		b.suspendedUntil = now.Add(selfSuspension)
 		logger.Error(
-			"pgdozor log burst detected; suspending collection of pgdozor logs",
+			"querysheriff log burst detected; suspending collection of querysheriff logs",
 			"threshold", selfBurstThreshold,
 			"window", selfBurstWindow,
 			"suspension", selfSuspension,
@@ -63,10 +63,10 @@ func (b *selfBreaker) admit(now time.Time, event ParsedLogEvent, logger *slog.Lo
 	return true
 }
 
-func isPgdozorRecord(event ParsedLogEvent) bool {
-	return containsPgdozor(event.Username) || containsPgdozor(event.DatabaseName)
+func isQuerySheriffRecord(event ParsedLogEvent) bool {
+	return containsQuerySheriff(event.Username) || containsQuerySheriff(event.DatabaseName)
 }
 
-func containsPgdozor(s string) bool {
-	return strings.Contains(strings.ToLower(s), "pgdozor")
+func containsQuerySheriff(s string) bool {
+	return strings.Contains(strings.ToLower(s), "querysheriff")
 }

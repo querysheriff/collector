@@ -34,13 +34,13 @@ func TestProcessLinePassesRecords(t *testing.T) {
 			true,
 		},
 		{
-			"pgdozor role now collected",
-			`{"user":"pgdozor","dbname":"app","error_severity":"LOG","message":"statement: SELECT 1"}`,
+			"querysheriff role now collected",
+			`{"user":"querysheriff","dbname":"app","error_severity":"LOG","message":"statement: SELECT 1"}`,
 			true,
 		},
 		{
-			"pgdozor database now collected",
-			`{"user":"app","dbname":"pgdozor","error_severity":"LOG","message":"statement: SELECT 1"}`,
+			"querysheriff database now collected",
+			`{"user":"app","dbname":"querysheriff","error_severity":"LOG","message":"statement: SELECT 1"}`,
 			true,
 		},
 		{

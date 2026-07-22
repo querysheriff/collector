@@ -1,11 +1,11 @@
-name: pgdozor-collector
+name: querysheriff-collector
 arch: ${ARCH}
 version: ${VERSION}
 section: database
 priority: optional
-maintainer: pgdozor <vladimir.kulikov@cdn77.com>
-description: PostgreSQL performance monitoring agent — samples stats views, tails jsonlog, and ships to the pgdozor backend.
-homepage: https://github.com/pgdozor/collector
+maintainer: querysheriff <vladimir.kulikov@cdn77.com>
+description: PostgreSQL performance monitoring agent — samples stats views, tails jsonlog, and ships to the querysheriff backend.
+homepage: https://github.com/querysheriff/collector
 license: Proprietary
 
 depends:
@@ -13,18 +13,18 @@ depends:
   - tzdata  # the collector loads the server's log_timezone at runtime (/usr/share/zoneinfo).
 
 contents:
-  - src: dist/pgdozor-collector-linux-amd64
-    dst: /usr/bin/pgdozor-collector
+  - src: dist/querysheriff-collector-linux-amd64
+    dst: /usr/bin/querysheriff-collector
     file_info:
       mode: 0755
 
-  - src: packaging/debian/pgdozor-collector.service
-    dst: /lib/systemd/system/pgdozor-collector.service
+  - src: packaging/debian/querysheriff-collector.service
+    dst: /lib/systemd/system/querysheriff-collector.service
     file_info:
       mode: 0644
 
-  - src: packaging/pgdozor-collector.yml.example
-    dst: /etc/pgdozor-collector.yml.example
+  - src: packaging/querysheriff-collector.yml.example
+    dst: /etc/querysheriff-collector.yml.example
     type: config
     file_info:
       mode: 0644

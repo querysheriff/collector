@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pgdozor/collector/internal/logs"
+	"github.com/querysheriff/collector/internal/logs"
 )
 
 // tailSettle is how long we wait for the tailer to open a freshly appeared file before writing the line we expect to receive.

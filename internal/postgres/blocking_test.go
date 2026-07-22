@@ -3,7 +3,7 @@ package postgres_test
 import (
 	"testing"
 
-	"github.com/pgdozor/collector/internal/postgres"
+	"github.com/querysheriff/collector/internal/postgres"
 )
 
 func snap(pid int32, blockers ...int32) postgres.ActivitySnapshot {

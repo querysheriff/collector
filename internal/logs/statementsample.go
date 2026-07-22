@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	sqltags "github.com/pgdozor/sqltags/go"
+	sqltags "github.com/querysheriff/sqltags/go"
 )
 
 const paramValuePattern = `(?:(NULL)|'((?:[^']|'')*)')`

@@ -11,7 +11,7 @@ func TestSelfBreakerSuspendsAndResumes(t *testing.T) {
 
 	var b selfBreaker
 	logger := slog.New(slog.DiscardHandler)
-	line := ParsedLogEvent{Username: "pgdozor", DatabaseName: "pgdozor"}
+	line := ParsedLogEvent{Username: "querysheriff", DatabaseName: "querysheriff"}
 	base := time.Unix(0, 0)
 
 	for i := range selfBurstThreshold {
@@ -35,7 +35,7 @@ func TestSelfBreakerIgnoresSlowDrip(t *testing.T) {
 
 	var b selfBreaker
 	logger := slog.New(slog.DiscardHandler)
-	line := ParsedLogEvent{Username: "pgdozor", DatabaseName: "pgdozor"}
+	line := ParsedLogEvent{Username: "querysheriff", DatabaseName: "querysheriff"}
 	base := time.Unix(0, 0)
 
 	for i := range selfBurstThreshold + 1 {
@@ -46,7 +46,7 @@ func TestSelfBreakerIgnoresSlowDrip(t *testing.T) {
 	}
 }
 
-func TestSelfBreakerPassesNonPgdozor(t *testing.T) {
+func TestSelfBreakerPassesNonQuerySheriff(t *testing.T) {
 	t.Parallel()
 
 	var b selfBreaker
@@ -56,7 +56,7 @@ func TestSelfBreakerPassesNonPgdozor(t *testing.T) {
 
 	for range selfBurstThreshold + 1 {
 		if !b.admit(base, line, logger) {
-			t.Fatal("non-pgdozor record must always be admitted")
+			t.Fatal("non-querysheriff record must always be admitted")
 		}
 	}
 }

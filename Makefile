@@ -24,7 +24,7 @@ fmt:
 
 .PHONY: proto-update
 proto-update:
-	GOPRIVATE=buf.build go get buf.build/gen/go/pgdozor/backend/connectrpc/go@latest
+	GOPRIVATE=buf.build go get buf.build/gen/go/querysheriff/backend/connectrpc/go@latest
 	go mod tidy
 
 .PHONY: test
@@ -45,11 +45,11 @@ dev-postgres-down:
 
 .PHONY: dev
 dev:
-	go run ./cmd/collector -config dev/pgdozor-collector.yml
+	go run ./cmd/collector -config dev/querysheriff-collector.yml
 
 .PHONY: build-linux
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "$(LDFLAGS)" -o $(DIST)/pgdozor-collector-linux-amd64 ./cmd/collector
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "$(LDFLAGS)" -o $(DIST)/querysheriff-collector-linux-amd64 ./cmd/collector
 
 .PHONY: deb
 deb: build-linux

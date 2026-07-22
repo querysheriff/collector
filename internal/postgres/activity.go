@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	sqltags "github.com/pgdozor/sqltags/go"
+	sqltags "github.com/querysheriff/sqltags/go"
 )
 
 type ActivitySnapshot struct {

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pgdozor/collector/internal/schedule"
+	"github.com/querysheriff/collector/internal/schedule"
 )
 
 func TestNextTick(t *testing.T) {
