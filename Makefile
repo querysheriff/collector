@@ -11,6 +11,7 @@ LDFLAGS := -s -w -X main.version=$(VERSION)
 .PHONY: check
 check:
 	$(MAKE) fmt
+	$(MAKE) tidy
 	$(MAKE) lint
 	$(MAKE) test
 
@@ -22,10 +23,14 @@ lint:
 fmt:
 	$(GOLANGCI) fmt -c .golangci.yml
 
+.PHONY: tidy
+tidy:
+	go mod tidy
+
 .PHONY: proto-update
 proto-update:
 	GOPRIVATE=buf.build go get buf.build/gen/go/querysheriff/backend/connectrpc/go@latest
-	go mod tidy
+	$(MAKE) tidy
 
 .PHONY: test
 test:

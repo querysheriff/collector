@@ -261,7 +261,10 @@ func vacuumRules() []rule {
 	return []rule{
 		prefixRule(querysheriffv1.LogEvent_LOG_CLASSIFICATION_AUTOVACUUM_CANCEL, "canceling autovacuum task"),
 		prefixRule(querysheriffv1.LogEvent_LOG_CLASSIFICATION_SKIPPING_VACUUM_LOCK_NOT_AVAILABLE, "skipping vacuum of"),
-		prefixRule(querysheriffv1.LogEvent_LOG_CLASSIFICATION_SKIPPING_ANALYZE_LOCK_NOT_AVAILABLE, "skipping analyze of"),
+		prefixRule(
+			querysheriffv1.LogEvent_LOG_CLASSIFICATION_SKIPPING_ANALYZE_LOCK_NOT_AVAILABLE,
+			"skipping analyze of",
+		),
 		reRule(querysheriffv1.LogEvent_LOG_CLASSIFICATION_TXID_WRAPAROUND_WARNING,
 			`^database (with OID (\d+)|"(.+?)") must be vacuumed within (\d+) transactions`, "database"),
 		reRule(querysheriffv1.LogEvent_LOG_CLASSIFICATION_TXID_WRAPAROUND_ERROR,
@@ -272,7 +275,10 @@ func vacuumRules() []rule {
 			"automatic aggressive vacuum to prevent wraparound of table"),
 		reRule(querysheriffv1.LogEvent_LOG_CLASSIFICATION_AUTOANALYZE_COMPLETED, autoAnalyzePattern,
 			"automatic analyze of table"),
-		prefixRule(querysheriffv1.LogEvent_LOG_CLASSIFICATION_AUTOVACUUM_LAUNCHER_STARTED, "autovacuum launcher started"),
+		prefixRule(
+			querysheriffv1.LogEvent_LOG_CLASSIFICATION_AUTOVACUUM_LAUNCHER_STARTED,
+			"autovacuum launcher started",
+		),
 		prefixRule(querysheriffv1.LogEvent_LOG_CLASSIFICATION_AUTOVACUUM_LAUNCHER_SHUTTING_DOWN,
 			"autovacuum launcher shutting down", "terminating autovacuum process due to administrator command"),
 	}
