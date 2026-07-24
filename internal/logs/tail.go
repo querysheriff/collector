@@ -118,7 +118,7 @@ func (s *session) currentDied() {
 		return
 	}
 	if err := s.cur.Err(); err != nil {
-		s.logger.Debug("tailed log file ended", "path", s.curPath, "error", err)
+		s.logger.Error("log file tail failed", "path", s.curPath, "error", err)
 	}
 	s.cur, s.curPath = nil, ""
 }
@@ -197,9 +197,6 @@ func (s *session) open(path string, whence int) error {
 func (s *session) closeCurrent() {
 	if s.cur == nil {
 		return
-	}
-	if err := s.cur.Err(); err != nil {
-		s.logger.Error("log file tail failed", "path", s.curPath, "error", err)
 	}
 	s.cur.Close()
 	s.cur = nil
