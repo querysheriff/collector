@@ -19,6 +19,7 @@ type Reporter interface {
 type PipelineConfig struct {
 	LogTimezone        *time.Location
 	DeleteRotatedFiles bool
+	LogFilename        string
 	Path               string
 	PollInterval       time.Duration
 }
@@ -42,7 +43,7 @@ func NewPipeline(
 	return &Pipeline{
 		cfg:      cfg,
 		logger:   logger,
-		tailer:   NewTailer(logger, cfg.DeleteRotatedFiles),
+		tailer:   NewTailer(logger, cfg.LogFilename, cfg.DeleteRotatedFiles),
 		parser:   NewParser(cfg.LogTimezone),
 		analyzer: NewAnalyzer(),
 		reporter: reporter,

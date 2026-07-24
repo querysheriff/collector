@@ -14,6 +14,8 @@ import (
 // tailSettle is how long we wait for the tailer to open a freshly appeared file before writing the line we expect to receive.
 const tailSettle = 300 * time.Millisecond
 
+const pgLogFilename = "postgresql-%Y-%m-%d_%H%M%S.log"
+
 func discardLogger() *slog.Logger {
 	return slog.New(slog.DiscardHandler)
 }
@@ -62,7 +64,7 @@ func startTailWith(t *testing.T, location string, deleteRotated bool) <-chan []b
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	stream, err := logs.NewTailer(discardLogger(), deleteRotated).Tail(ctx, location)
+	stream, err := logs.NewTailer(discardLogger(), pgLogFilename, deleteRotated).Tail(ctx, location)
 	if err != nil {
 		t.Fatalf("Tail: %v", err)
 	}
@@ -243,8 +245,8 @@ func TestTailDirectoryDeletesRotatedFiles(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	a := filepath.Join(dir, "a.json")
-	b := filepath.Join(dir, "b.json")
+	a := filepath.Join(dir, "postgresql-2026-07-24_100000.json")
+	b := filepath.Join(dir, "postgresql-2026-07-24_110000.json")
 	writeFile(t, a, "")
 	writeFile(t, b, "")
 
@@ -256,8 +258,8 @@ func TestTailDirectoryDeletesRotatedFiles(t *testing.T) {
 	time.Sleep(tailSettle)
 
 	// A freshly rotated, newer file appears; the tailer switches to it and
-	// deletes the older a.json and b.json (current c.json is kept).
-	c := filepath.Join(dir, "c.json")
+	// deletes the two older files (the current one is kept).
+	c := filepath.Join(dir, "postgresql-2026-07-24_120000.json")
 	writeFile(t, c, "")
 	time.Sleep(tailSettle)
 
@@ -265,13 +267,13 @@ func TestTailDirectoryDeletesRotatedFiles(t *testing.T) {
 	wantLine(t, stream, "after rotation")
 
 	if _, err := os.Stat(a); !os.IsNotExist(err) {
-		t.Errorf("a.json should have been deleted, stat err = %v", err)
+		t.Errorf("%s should have been deleted, stat err = %v", filepath.Base(a), err)
 	}
 	if _, err := os.Stat(b); !os.IsNotExist(err) {
-		t.Errorf("b.json should have been deleted, stat err = %v", err)
+		t.Errorf("%s should have been deleted, stat err = %v", filepath.Base(b), err)
 	}
 	if _, err := os.Stat(c); err != nil {
-		t.Errorf("c.json (current) should still exist, stat err = %v", err)
+		t.Errorf("%s (current) should still exist, stat err = %v", filepath.Base(c), err)
 	}
 }
 
@@ -281,8 +283,8 @@ func TestTailDirectoryDeletesRotatedLogFiles(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	oldJSON := filepath.Join(dir, "a.json")
-	oldLog := filepath.Join(dir, "a.log")
+	oldJSON := filepath.Join(dir, "postgresql-2026-07-24_110000.json")
+	oldLog := filepath.Join(dir, "postgresql-2026-07-24_100000.log")
 	writeFile(t, oldJSON, "")
 	writeFile(t, oldLog, "")
 
@@ -293,7 +295,7 @@ func TestTailDirectoryDeletesRotatedLogFiles(t *testing.T) {
 	stream := startTailWith(t, dir, true)
 	time.Sleep(tailSettle)
 
-	b := filepath.Join(dir, "b.json")
+	b := filepath.Join(dir, "postgresql-2026-07-24_120000.json")
 	writeFile(t, b, "")
 	time.Sleep(tailSettle)
 
@@ -301,9 +303,49 @@ func TestTailDirectoryDeletesRotatedLogFiles(t *testing.T) {
 	wantLine(t, stream, "after rotation")
 
 	if _, err := os.Stat(oldLog); !os.IsNotExist(err) {
-		t.Errorf("a.log should have been deleted, stat err = %v", err)
+		t.Errorf("%s should have been deleted, stat err = %v", filepath.Base(oldLog), err)
 	}
 	if _, err := os.Stat(b); err != nil {
-		t.Errorf("b.json (current) should still exist, stat err = %v", err)
+		t.Errorf("%s (current) should still exist, stat err = %v", filepath.Base(b), err)
+	}
+}
+
+// 10. Deletion is scoped to Postgres's own log_filename template: unrelated
+// .log/.json files sharing the directory (e.g. repmgr, pgbouncer) are left
+// alone even though they are older than the file just rotated in.
+func TestTailDirectoryKeepsForeignLogFiles(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	pgOld := filepath.Join(dir, "postgresql-2026-07-24_110000.json")
+	repmgr := filepath.Join(dir, "repmgr.log")
+	backup := filepath.Join(dir, "backup.json")
+	writeFile(t, pgOld, "")
+	writeFile(t, repmgr, "")
+	writeFile(t, backup, "")
+
+	now := time.Now().UTC()
+	setModTime(t, pgOld, now.Add(-2*time.Minute))  // followed at startup
+	setModTime(t, repmgr, now.Add(-3*time.Minute)) // older, but not a Postgres log
+	setModTime(t, backup, now.Add(-3*time.Minute)) // older, but not a Postgres log
+
+	stream := startTailWith(t, dir, true)
+	time.Sleep(tailSettle)
+
+	c := filepath.Join(dir, "postgresql-2026-07-24_120000.json")
+	writeFile(t, c, "")
+	time.Sleep(tailSettle)
+
+	appendToFile(t, c, "after rotation\n")
+	wantLine(t, stream, "after rotation")
+
+	if _, err := os.Stat(pgOld); !os.IsNotExist(err) {
+		t.Errorf("%s should have been deleted, stat err = %v", filepath.Base(pgOld), err)
+	}
+	if _, err := os.Stat(repmgr); err != nil {
+		t.Errorf("%s should have been kept, stat err = %v", filepath.Base(repmgr), err)
+	}
+	if _, err := os.Stat(backup); err != nil {
+		t.Errorf("%s should have been kept, stat err = %v", filepath.Base(backup), err)
 	}
 }

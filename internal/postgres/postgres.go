@@ -23,6 +23,8 @@ type Client struct {
 	VersionNum int
 	// log_timezone
 	LogTimezone *time.Location
+	// log_filename
+	LogFilename string
 
 	// cumulative pg_stat_statements counters from the previous collection, for computing deltas
 	statementsState map[StatementIdentity]statementCounters
@@ -73,10 +75,18 @@ func Connect(ctx context.Context, dsn string) (*Client, error) {
 		return nil, fmt.Errorf("load log timezone %q: %w", logTimezoneName, err)
 	}
 
+	var logFilename string
+	err = pool.QueryRow(ctx, "SELECT current_setting('log_filename')").Scan(&logFilename)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("query log_filename: %w", err)
+	}
+
 	return &Client{
 		pool:        pool,
 		VersionNum:  versionNum,
 		LogTimezone: logTimezone,
+		LogFilename: logFilename,
 	}, nil
 }
 

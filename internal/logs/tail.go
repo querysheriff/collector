@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -14,12 +15,26 @@ import (
 )
 
 type Tailer struct {
-	logger        *slog.Logger
-	deleteRotated bool
+	logger       *slog.Logger
+	rotatedMatch *regexp.Regexp
 }
 
-func NewTailer(logger *slog.Logger, deleteRotated bool) *Tailer {
-	return &Tailer{logger: logger, deleteRotated: deleteRotated}
+func NewTailer(logger *slog.Logger, logFilename string, deleteRotated bool) *Tailer {
+	t := &Tailer{logger: logger}
+	if !deleteRotated {
+		return t
+	}
+
+	matcher, err := rotatedLogMatcher(logFilename)
+	if err != nil {
+		logger.Error("could not compile log_filename matcher; rotated-file deletion disabled",
+			"log_filename", logFilename, "error", err)
+
+		return t
+	}
+	t.rotatedMatch = matcher
+
+	return t
 }
 
 func (t Tailer) Tail(ctx context.Context, logDir string) (<-chan []byte, error) {
@@ -33,7 +48,7 @@ func (t Tailer) Tail(ctx context.Context, logDir string) (<-chan []byte, error) 
 	}
 
 	out := make(chan []byte)
-	s := &session{out: out, logger: t.logger, dir: logDir, deleteRotated: t.deleteRotated}
+	s := &session{out: out, logger: t.logger, dir: logDir, rotatedMatch: t.rotatedMatch}
 
 	if path, ok := s.newest(); ok {
 		if err := s.open(path, io.SeekEnd); err != nil {
@@ -53,8 +68,7 @@ type session struct {
 	// dir is the watched directory. The session always follows the newest .json file within it.
 	dir string
 
-	// deleteRotated removes older rotated .json/.log files after a rotation switch.
-	deleteRotated bool
+	rotatedMatch *regexp.Regexp
 
 	cur     *follower.Follower
 	curPath string
@@ -133,7 +147,7 @@ func (s *session) switchIfNewer(path string) {
 }
 
 func (s *session) deleteOlderRotatedFiles() {
-	if !s.deleteRotated {
+	if s.rotatedMatch == nil {
 		return
 	}
 
@@ -147,7 +161,7 @@ func (s *session) deleteOlderRotatedFiles() {
 	curBase := filepath.Base(s.curPath)
 	for _, e := range entries {
 		name := e.Name()
-		if e.IsDir() || name == curBase || !isRotatableLog(name) {
+		if e.IsDir() || name == curBase || !s.rotatedMatch.MatchString(name) {
 			continue
 		}
 		info, infoErr := e.Info()
@@ -216,10 +230,4 @@ func (s *session) newest() (string, bool) {
 
 func isJSONLog(name string) bool {
 	return filepath.Ext(name) == ".json"
-}
-
-func isRotatableLog(name string) bool {
-	ext := filepath.Ext(name)
-
-	return ext == ".json" || ext == ".log"
 }

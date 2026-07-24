@@ -75,6 +75,7 @@ func startLogPipeline(
 		logs.PipelineConfig{
 			LogTimezone:        pg.LogTimezone,
 			DeleteRotatedFiles: cfg.Logs.DeleteRotated,
+			LogFilename:        pg.LogFilename,
 			Path:               cfg.Logs.Path,
 			PollInterval:       logsInterval,
 		},
