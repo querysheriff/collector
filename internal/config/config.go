@@ -22,8 +22,9 @@ type BackendConfig struct {
 }
 
 type LogsConfig struct {
-	Path          string `yaml:"path"`
-	DeleteRotated bool   `yaml:"delete_rotated"`
+	Path                  string `yaml:"path"`
+	DeleteRotated         bool   `yaml:"delete_rotated"`
+	DeleteRotatedJSONOnly bool   `yaml:"delete_rotated_json_only"`
 }
 
 func Load(path string) (Config, error) {

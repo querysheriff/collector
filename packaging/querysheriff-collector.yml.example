@@ -18,3 +18,5 @@ logs:
   path: /var/log/postgresql
   # Let the collector delete old rotated .json files after a rotation switch, since PostgreSQL can't do it itself.
   delete_rotated: true
+  # Restrict deletion to .json files, leaving the companion .log files for something else (e.g. logrotate) to reap.
+  delete_rotated_json_only: false

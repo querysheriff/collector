@@ -19,13 +19,13 @@ type Tailer struct {
 	rotatedMatch *regexp.Regexp
 }
 
-func NewTailer(logger *slog.Logger, logFilename string, deleteRotated bool) *Tailer {
+func NewTailer(logger *slog.Logger, logFilename string, deleteRotated, jsonOnly bool) *Tailer {
 	t := &Tailer{logger: logger}
 	if !deleteRotated {
 		return t
 	}
 
-	matcher, err := rotatedLogMatcher(logFilename)
+	matcher, err := rotatedLogMatcher(logFilename, jsonOnly)
 	if err != nil {
 		logger.Error("could not compile log_filename matcher; rotated-file deletion disabled",
 			"log_filename", logFilename, "error", err)

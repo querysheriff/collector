@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func rotatedLogMatcher(logFilename string) (*regexp.Regexp, error) {
+func rotatedLogMatcher(logFilename string, jsonOnly bool) (*regexp.Regexp, error) {
 	stem := strings.TrimSuffix(logFilename, ".log")
 
 	var b strings.Builder
@@ -19,7 +19,11 @@ func rotatedLogMatcher(logFilename string) (*regexp.Regexp, error) {
 		}
 		b.WriteString(regexp.QuoteMeta(stem[i : i+1]))
 	}
-	b.WriteString(`\.(?:json|log)$`)
+	if jsonOnly {
+		b.WriteString(`\.json$`)
+	} else {
+		b.WriteString(`\.(?:json|log)$`)
+	}
 
 	return regexp.Compile(b.String())
 }

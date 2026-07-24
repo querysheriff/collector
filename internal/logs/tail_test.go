@@ -56,15 +56,15 @@ func setModTime(t *testing.T, path string, mod time.Time) {
 func startTail(t *testing.T, location string) <-chan []byte {
 	t.Helper()
 
-	return startTailWith(t, location, false)
+	return startTailWith(t, location, false, false)
 }
 
-func startTailWith(t *testing.T, location string, deleteRotated bool) <-chan []byte {
+func startTailWith(t *testing.T, location string, deleteRotated, jsonOnly bool) <-chan []byte {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	stream, err := logs.NewTailer(discardLogger(), pgLogFilename, deleteRotated).Tail(ctx, location)
+	stream, err := logs.NewTailer(discardLogger(), pgLogFilename, deleteRotated, jsonOnly).Tail(ctx, location)
 	if err != nil {
 		t.Fatalf("Tail: %v", err)
 	}
@@ -254,7 +254,7 @@ func TestTailDirectoryDeletesRotatedFiles(t *testing.T) {
 	setModTime(t, a, now.Add(-3*time.Minute)) // oldest
 	setModTime(t, b, now.Add(-2*time.Minute)) // newer, followed at startup
 
-	stream := startTailWith(t, dir, true)
+	stream := startTailWith(t, dir, true, false)
 	time.Sleep(tailSettle)
 
 	// A freshly rotated, newer file appears; the tailer switches to it and
@@ -292,7 +292,7 @@ func TestTailDirectoryDeletesRotatedLogFiles(t *testing.T) {
 	setModTime(t, oldJSON, now.Add(-2*time.Minute)) // followed at startup
 	setModTime(t, oldLog, now.Add(-3*time.Minute))  // oldest
 
-	stream := startTailWith(t, dir, true)
+	stream := startTailWith(t, dir, true, false)
 	time.Sleep(tailSettle)
 
 	b := filepath.Join(dir, "postgresql-2026-07-24_120000.json")
@@ -329,7 +329,7 @@ func TestTailDirectoryKeepsForeignLogFiles(t *testing.T) {
 	setModTime(t, repmgr, now.Add(-3*time.Minute)) // older, but not a Postgres log
 	setModTime(t, backup, now.Add(-3*time.Minute)) // older, but not a Postgres log
 
-	stream := startTailWith(t, dir, true)
+	stream := startTailWith(t, dir, true, false)
 	time.Sleep(tailSettle)
 
 	c := filepath.Join(dir, "postgresql-2026-07-24_120000.json")
@@ -347,5 +347,41 @@ func TestTailDirectoryKeepsForeignLogFiles(t *testing.T) {
 	}
 	if _, err := os.Stat(backup); err != nil {
 		t.Errorf("%s should have been kept, stat err = %v", filepath.Base(backup), err)
+	}
+}
+
+// 11. With jsonOnly set, deletion removes older .json files but leaves the
+// companion .log files PostgreSQL emits, even when both match log_filename.
+func TestTailDirectoryDeletesRotatedJSONOnly(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	oldJSON := filepath.Join(dir, "postgresql-2026-07-24_100000.json")
+	oldLog := filepath.Join(dir, "postgresql-2026-07-24_100000.log")
+	writeFile(t, oldJSON, "")
+	writeFile(t, oldLog, "")
+
+	now := time.Now().UTC()
+	setModTime(t, oldJSON, now.Add(-3*time.Minute))
+	setModTime(t, oldLog, now.Add(-3*time.Minute))
+
+	writeFile(t, filepath.Join(dir, "postgresql-2026-07-24_110000.json"), "")
+	setModTime(t, filepath.Join(dir, "postgresql-2026-07-24_110000.json"), now.Add(-2*time.Minute))
+
+	stream := startTailWith(t, dir, true, true)
+	time.Sleep(tailSettle)
+
+	c := filepath.Join(dir, "postgresql-2026-07-24_120000.json")
+	writeFile(t, c, "")
+	time.Sleep(tailSettle)
+
+	appendToFile(t, c, "after rotation\n")
+	wantLine(t, stream, "after rotation")
+
+	if _, err := os.Stat(oldJSON); !os.IsNotExist(err) {
+		t.Errorf("%s should have been deleted, stat err = %v", filepath.Base(oldJSON), err)
+	}
+	if _, err := os.Stat(oldLog); err != nil {
+		t.Errorf("%s should have been kept, stat err = %v", filepath.Base(oldLog), err)
 	}
 }

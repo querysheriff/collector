@@ -8,6 +8,7 @@ func TestRotatedLogMatcher(t *testing.T) {
 	cases := []struct {
 		name        string
 		logFilename string
+		jsonOnly    bool
 		matches     []string
 		rejects     []string
 	}{
@@ -26,6 +27,13 @@ func TestRotatedLogMatcher(t *testing.T) {
 				"mypostgresql-2026-07-24_120000.json",
 				"postgresql-2026-07-24_120000.json.gz",
 			},
+		},
+		{
+			name:        "json only rejects .log",
+			logFilename: "postgresql-%Y-%m-%d_%H%M%S.log",
+			jsonOnly:    true,
+			matches:     []string{"postgresql-2026-07-24_120000.json"},
+			rejects:     []string{"postgresql-2026-07-24_120000.log", "repmgr.log"},
 		},
 		{
 			name:        "weekday template",
@@ -51,7 +59,7 @@ func TestRotatedLogMatcher(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			re, err := rotatedLogMatcher(tc.logFilename)
+			re, err := rotatedLogMatcher(tc.logFilename, tc.jsonOnly)
 			if err != nil {
 				t.Fatalf("rotatedLogMatcher(%q): %v", tc.logFilename, err)
 			}
