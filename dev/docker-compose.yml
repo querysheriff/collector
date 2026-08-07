@@ -45,6 +45,8 @@ services:
       - auto_explain.log_verbose=on
       - -c
       - auto_explain.sample_rate=0.5
+      - -c
+      - work_mem=32MB
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
