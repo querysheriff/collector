@@ -53,7 +53,9 @@ LEFT JOIN pg_catalog.pg_locks l ON l.pid = a.pid AND l.granted = FALSE
 WHERE a.backend_type = 'client backend'
   AND a.state IN ('active', 'idle in transaction', 'idle in transaction (aborted)')
   AND a.xact_start IS NOT NULL
-  AND a.xact_start <= clock_timestamp() - interval '1 second'
+  AND (a.xact_start <= clock_timestamp() - interval '1 second'
+       OR l.pid IS NOT NULL
+       OR a.wait_event_type = 'Lock')
 ORDER BY a.pid;
 `
 
