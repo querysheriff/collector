@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/url"
 	"os"
 
@@ -65,34 +64,15 @@ func (c Config) Validate() error {
 	return nil
 }
 
-// validateBackendURL requires https so the collector token is never sent in cleartext;
-// http is permitted only for a loopback host, to keep local development working.
 func validateBackendURL(raw string) error {
 	u, err := url.Parse(raw)
 	if err != nil {
 		return fmt.Errorf("backend.url is not a valid URL: %w", err)
 	}
 
-	switch u.Scheme {
-	case "https":
-		return nil
-	case "http":
-		if !isLoopbackHost(u.Hostname()) {
-			return errors.New("backend.url must use https; http is allowed only for localhost")
-		}
-
-		return nil
-	default:
+	if u.Scheme != "http" && u.Scheme != "https" {
 		return fmt.Errorf("backend.url must use http or https, got %q", u.Scheme)
 	}
-}
 
-func isLoopbackHost(host string) bool {
-	if host == "localhost" {
-		return true
-	}
-
-	ip := net.ParseIP(host)
-
-	return ip != nil && ip.IsLoopback()
+	return nil
 }

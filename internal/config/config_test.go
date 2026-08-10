@@ -29,7 +29,7 @@ func TestValidate(t *testing.T) {
 		{"missing postgres", func(c *config.Config) { c.Postgres = "" }, true},
 		{"http localhost allowed", func(c *config.Config) { c.Backend.URL = "http://localhost:3000" }, false},
 		{"http loopback ip allowed", func(c *config.Config) { c.Backend.URL = "http://127.0.0.1:3000" }, false},
-		{"http remote rejected", func(c *config.Config) { c.Backend.URL = "http://backend.example" }, true},
+		{"http remote allowed", func(c *config.Config) { c.Backend.URL = "http://backend.example" }, false},
 		{"non-http scheme rejected", func(c *config.Config) { c.Backend.URL = "ftp://backend.example" }, true},
 	}
 

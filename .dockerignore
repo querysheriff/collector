@@ -1,0 +1,11 @@
+.git
+.github
+.zed
+dev
+dist
+tmp
+packaging
+scripts
+*.md
+Dockerfile
+Makefile

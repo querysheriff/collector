@@ -4,7 +4,8 @@
 # Edit that copy, then run: systemctl restart querysheriff-collector
 
 backend:
-  # Base URL of the querysheriff backend. HTTPS is required (HTTP is allowed only for a loopback host).
+  # Base URL of the querysheriff backend. Use https unless the backend is reachable over a trusted
+  # network (same host, same cluster) — the token below is sent as a bearer credential.
   url: https://querysheriff.example.com/api
 
   # Collector token issued by an admin. Authenticates this collector and identifies which server it reports as.

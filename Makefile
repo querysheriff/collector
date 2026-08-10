@@ -7,6 +7,7 @@ GIT_VERSION := $(shell git describe --tags --always --dirty 2>/dev/null | sed 's
 VERSION ?= $(or $(GIT_VERSION),0.0.0-dev)
 DIST := dist
 LDFLAGS := -s -w -X main.version=$(VERSION)
+IMAGE ?= ghcr.io/querysheriff/collector
 
 .PHONY: check
 check:
@@ -59,6 +60,10 @@ build-linux:
 .PHONY: deb
 deb: build-linux
 	ARCH=amd64 VERSION=$(VERSION) $(NFPM) pkg -f packaging/nfpm.yml -p deb -t $(DIST)
+
+.PHONY: docker
+docker:
+	docker build --build-arg VERSION=$(VERSION) -t $(IMAGE):$(VERSION) .
 
 # Usage: `make release VERSION=0.1.0`.
 # Validates -> pushes -> fires .github/workflows/release.yml -> builds the .deb -> publishes to GitHub Release.
