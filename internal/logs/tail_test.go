@@ -11,7 +11,7 @@ import (
 	"github.com/querysheriff/collector/internal/logs"
 )
 
-// tailSettle is how long we wait for the tailer to open a freshly appeared file before writing the line we expect to receive.
+// How long to wait for the tailer to open a freshly appeared file before writing to it.
 const tailSettle = 300 * time.Millisecond
 
 const pgLogFilename = "postgresql-%Y-%m-%d_%H%M%S.log"
@@ -99,7 +99,6 @@ func wantNoLine(t *testing.T, stream <-chan []byte) {
 	}
 }
 
-// 1. directory holds one pre-existing empty file, and someone writes to it.
 func TestTailExistingEmptyFileReceivesWrites(t *testing.T) {
 	t.Parallel()
 
@@ -113,7 +112,6 @@ func TestTailExistingEmptyFileReceivesWrites(t *testing.T) {
 	wantLine(t, stream, "first line")
 }
 
-// 2. the followed file is deleted, then created again, and someone writes to it.
 func TestTailReopensAfterDeleteAndRecreate(t *testing.T) {
 	t.Parallel()
 
@@ -137,7 +135,6 @@ func TestTailReopensAfterDeleteAndRecreate(t *testing.T) {
 	wantLine(t, stream, "after recreate")
 }
 
-// 3. directory exists with no files in it, file is created and written to it.
 func TestTailDirectoryPicksUpCreatedFile(t *testing.T) {
 	t.Parallel()
 
@@ -154,7 +151,6 @@ func TestTailDirectoryPicksUpCreatedFile(t *testing.T) {
 	wantLine(t, stream, "born line")
 }
 
-// 4. directory exists with one non-empty file, file is written to it.
 func TestTailDirectoryExistingFileSkipsHistory(t *testing.T) {
 	t.Parallel()
 
@@ -169,7 +165,6 @@ func TestTailDirectoryExistingFileSkipsHistory(t *testing.T) {
 	wantLine(t, stream, "new line")
 }
 
-// 5. directory exists with two empty files; one of them is written to, so it switches to it.
 func TestTailDirectorySwitchesToWrittenFile(t *testing.T) {
 	t.Parallel()
 
@@ -194,7 +189,6 @@ func TestTailDirectorySwitchesToWrittenFile(t *testing.T) {
 	wantLine(t, stream, "after switch")
 }
 
-// 6. one empty file is written to, then a second file appears and is written to, then a third.
 func TestTailDirectoryFollowsNewestAsFilesAppear(t *testing.T) {
 	t.Parallel()
 
@@ -221,7 +215,6 @@ func TestTailDirectoryFollowsNewestAsFilesAppear(t *testing.T) {
 	wantLine(t, stream, "from c")
 }
 
-// 7. directory holds only non-.json files (including a classic .log); writing to one yields nothing.
 func TestTailDirectoryIgnoresBadExtensions(t *testing.T) {
 	t.Parallel()
 
@@ -239,8 +232,6 @@ func TestTailDirectoryIgnoresBadExtensions(t *testing.T) {
 	wantNoLine(t, stream)
 }
 
-// 8. With deletion enabled, rotating to a newer .json file removes the older
-// .json files while leaving the current one intact.
 func TestTailDirectoryDeletesRotatedFiles(t *testing.T) {
 	t.Parallel()
 
@@ -257,8 +248,6 @@ func TestTailDirectoryDeletesRotatedFiles(t *testing.T) {
 	stream := startTailWith(t, dir, true, false)
 	time.Sleep(tailSettle)
 
-	// A freshly rotated, newer file appears; the tailer switches to it and
-	// deletes the two older files (the current one is kept).
 	c := filepath.Join(dir, "postgresql-2026-07-24_120000.json")
 	writeFile(t, c, "")
 	time.Sleep(tailSettle)
@@ -277,8 +266,6 @@ func TestTailDirectoryDeletesRotatedFiles(t *testing.T) {
 	}
 }
 
-// 9. Deletion also removes the older .log files PostgreSQL emits alongside the
-// .json, even though the tailer only ever follows .json.
 func TestTailDirectoryDeletesRotatedLogFiles(t *testing.T) {
 	t.Parallel()
 
@@ -310,9 +297,6 @@ func TestTailDirectoryDeletesRotatedLogFiles(t *testing.T) {
 	}
 }
 
-// 10. Deletion is scoped to Postgres's own log_filename template: unrelated
-// .log/.json files sharing the directory (e.g. repmgr, pgbouncer) are left
-// alone even though they are older than the file just rotated in.
 func TestTailDirectoryKeepsForeignLogFiles(t *testing.T) {
 	t.Parallel()
 
@@ -350,8 +334,6 @@ func TestTailDirectoryKeepsForeignLogFiles(t *testing.T) {
 	}
 }
 
-// 11. With jsonOnly set, deletion removes older .json files but leaves the
-// companion .log files PostgreSQL emits, even when both match log_filename.
 func TestTailDirectoryDeletesRotatedJSONOnly(t *testing.T) {
 	t.Parallel()
 

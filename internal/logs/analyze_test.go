@@ -8,7 +8,6 @@ import (
 	"github.com/querysheriff/collector/internal/logs"
 )
 
-// Analyze classifies a representative message.
 func TestAnalyzeClassification(t *testing.T) {
 	t.Parallel()
 
@@ -569,8 +568,7 @@ func TestAnalyzeClassification(t *testing.T) {
 			querysheriffv1.LogEvent_LOG_CLASSIFICATION_UNSPECIFIED,
 		},
 		{
-			// Shares the "process" prefix with the lock rules but matches neither regexp, so it
-			// must fall through to UNSPECIFIED rather than borrowing a lock classification.
+			// Shares the "process" prefix with the lock rules but matches neither regexp.
 			"prefix_hit_regexp_miss",
 			"process 42 is doing something unrecognized",
 			querysheriffv1.LogEvent_LOG_CLASSIFICATION_UNSPECIFIED,

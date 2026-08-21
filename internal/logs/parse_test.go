@@ -9,7 +9,6 @@ import (
 	"github.com/querysheriff/collector/internal/logs"
 )
 
-// 1. A full jsonlog record maps onto the ParsedLogEvent's fields, including the detail/hint/context/statement siblings.
 func TestParseFields(t *testing.T) {
 	t.Parallel()
 
@@ -55,7 +54,6 @@ func TestParseFields(t *testing.T) {
 	}
 }
 
-// 2. error_severity maps to the wire level; DEBUG1–DEBUG5 collapse to DEBUG; unknown becomes UNSPECIFIED.
 func TestParseSeverityMapping(t *testing.T) {
 	t.Parallel()
 
@@ -86,7 +84,6 @@ func TestParseSeverityMapping(t *testing.T) {
 	}
 }
 
-// 3. The timestamp is interpreted in the configured timezone, not the printed zone abbreviation.
 func TestParseUsesConfiguredTimezone(t *testing.T) {
 	t.Parallel()
 
@@ -110,7 +107,6 @@ func TestParseUsesConfiguredTimezone(t *testing.T) {
 	}
 }
 
-// 4. A line that is not valid JSON is rejected (ok=false).
 func TestParseInvalidJSON(t *testing.T) {
 	t.Parallel()
 
@@ -123,7 +119,6 @@ func TestParseInvalidJSON(t *testing.T) {
 	}
 }
 
-// 5. A malformed/absent timestamp yields the zero time rather than a parse failure.
 func TestParseMissingTimestamp(t *testing.T) {
 	t.Parallel()
 

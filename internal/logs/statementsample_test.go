@@ -11,7 +11,6 @@ import (
 	"github.com/querysheriff/collector/internal/logs"
 )
 
-// A log_min_duration_statement line yields a statement sample with its duration.
 func TestStatementSampleLogMinDuration(t *testing.T) {
 	t.Parallel()
 
@@ -29,7 +28,6 @@ func TestStatementSampleLogMinDuration(t *testing.T) {
 	}
 }
 
-// Bind parameters from the DETAIL line are attached to the sample; NULL becomes the empty string.
 func TestStatementSampleBindParameters(t *testing.T) {
 	t.Parallel()
 
@@ -97,7 +95,6 @@ func TestStatementSampleSkipsBindStep(t *testing.T) {
 	}
 }
 
-// auto_explain JSON output is classified and preserved verbatim in the sample.
 func TestStatementSampleAutoExplainJSON(t *testing.T) {
 	t.Parallel()
 
@@ -119,7 +116,6 @@ func TestStatementSampleAutoExplainJSON(t *testing.T) {
 	}
 }
 
-// auto_explain text output is parsed into query text plus the preserved plan body.
 func TestStatementSampleAutoExplainText(t *testing.T) {
 	t.Parallel()
 
@@ -141,7 +137,6 @@ func TestStatementSampleAutoExplainText(t *testing.T) {
 	}
 }
 
-// A slow extended-protocol execute with a multi-line query keeps the whole query text and its bind params.
 func TestStatementSampleMultilineExecuteWithParams(t *testing.T) {
 	t.Parallel()
 
@@ -178,7 +173,6 @@ func TestStatementSampleMultilineExecuteWithParams(t *testing.T) {
 	}
 }
 
-// A slow auto_explain JSON line with a multi-line query keeps the query text, params, and raw plan.
 func TestStatementSampleMultilineAutoExplainJSON(t *testing.T) {
 	t.Parallel()
 
@@ -210,7 +204,6 @@ func TestStatementSampleMultilineAutoExplainJSON(t *testing.T) {
 	}
 }
 
-// A slow simple-protocol statement with a multi-line query keeps the whole query text and has no params.
 func TestStatementSampleMultilineStatement(t *testing.T) {
 	t.Parallel()
 
@@ -242,8 +235,7 @@ func TestStatementSampleMultilineStatement(t *testing.T) {
 	}
 }
 
-// A leading metadata comment on a log_min_duration statement is parsed into tags
-// and stripped from the reported query.
+// A leading metadata comment becomes tags and is stripped from the reported query.
 func TestStatementSampleLogMinDurationTags(t *testing.T) {
 	t.Parallel()
 
@@ -263,7 +255,6 @@ func TestStatementSampleLogMinDurationTags(t *testing.T) {
 	}
 }
 
-// auto_explain output carries its tags too, while the raw plan JSON is preserved verbatim.
 func TestStatementSampleAutoExplainTags(t *testing.T) {
 	t.Parallel()
 
@@ -285,7 +276,6 @@ func TestStatementSampleAutoExplainTags(t *testing.T) {
 	}
 }
 
-// A query with no metadata comment yields no tags and is reported unchanged.
 func TestStatementSampleNoTags(t *testing.T) {
 	t.Parallel()
 

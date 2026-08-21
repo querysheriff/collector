@@ -89,7 +89,6 @@ func TestRunTasksDoNotBlockEachOther(t *testing.T) {
 		t.Fatal("slow task never started")
 	}
 
-	// The fast task keeps firing while the slow task is still parked in its run.
 	for range 3 {
 		select {
 		case <-fast:

@@ -8,7 +8,6 @@ import (
 	"github.com/querysheriff/collector/internal/postgres"
 )
 
-// A fully-populated activity snapshot maps every field onto its named proto field.
 func TestActivitySnapshotsToProto(t *testing.T) {
 	t.Parallel()
 
@@ -92,7 +91,7 @@ func TestActivitySnapshotsToProto(t *testing.T) {
 	}
 }
 
-// Nil optional fields deref to their zero value, and absent timestamps map to nil (not epoch 0).
+// Nil optionals deref to their zero value, and absent timestamps map to nil, not epoch 0.
 func TestActivitySnapshotsToProtoNilOptionals(t *testing.T) {
 	t.Parallel()
 
@@ -112,7 +111,6 @@ func TestActivitySnapshotsToProtoNilOptionals(t *testing.T) {
 	}
 }
 
-// Each statement-delta field lands in the matching proto field.
 func TestStatementDeltasToProto(t *testing.T) {
 	t.Parallel()
 
@@ -174,8 +172,6 @@ func TestStatementTextsToProto(t *testing.T) {
 	}
 }
 
-// A log event without a sample maps StatementSample to nil; with one, the sample reuses the
-// event's OccurredAt. A zero OccurredAt maps to a nil timestamp rather than epoch 0.
 func TestLogEventsToProtoStatementSample(t *testing.T) {
 	t.Parallel()
 

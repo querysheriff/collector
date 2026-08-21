@@ -11,11 +11,10 @@ type classification = querysheriffv1.LogEvent_LogClassification
 
 const classUnspecified = querysheriffv1.LogEvent_LOG_CLASSIFICATION_UNSPECIFIED
 
-// postgresLogTimestamp matches a printed server timestamp, e.g. "2026-06-14 12:00:00.123 UTC".
+// e.g. "2026-06-14 12:00:00.123 UTC".
 const postgresLogTimestamp = `(\d+-\d+-\d+ \d+:\d+:\d+(?:\.\d+)?(?:[\d:+-]+| \w+))`
 
-// match gates a log message on a cheap prefix check and an optional capture regexp.
-// A nil regexp classifies on the prefix alone.
+// A cheap prefix check plus an optional capture regexp; a nil regexp classifies on the prefix alone.
 type match struct {
 	prefixes []string
 	re       *regexp.Regexp
@@ -31,16 +30,12 @@ func (m match) matchesPrefix(content string) bool {
 	return false
 }
 
-// rule describes one log classification rule: match selects applicable messages,
-// class is the default classification, and apply optionally enriches the event.
 type rule struct {
 	class classification
 	match match
 	apply func(parts []string, e *AnalyzedLogEvent)
 }
 
-// Analyzer classifies parsed log events against a fixed rule table and attaches a statement sample
-// when the event carries one.
 type Analyzer struct {
 	rules []rule
 }
@@ -49,7 +44,6 @@ func NewAnalyzer() *Analyzer {
 	return &Analyzer{rules: allRules(newStatementSampleExtractor())}
 }
 
-// Analyze classifies a parsed event and returns it wrapped with its classification and any sample.
 func (a *Analyzer) Analyze(parsed ParsedLogEvent) AnalyzedLogEvent {
 	event := AnalyzedLogEvent{ParsedLogEvent: parsed}
 	a.classify(&event)
@@ -57,7 +51,6 @@ func (a *Analyzer) Analyze(parsed ParsedLogEvent) AnalyzedLogEvent {
 	return event
 }
 
-// classify applies the first rule whose prefix and regexp match, running its apply hook if any.
 func (a *Analyzer) classify(event *AnalyzedLogEvent) {
 	for i := range a.rules {
 		r := &a.rules[i]

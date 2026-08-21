@@ -93,9 +93,7 @@ func startLogPipeline(
 	)
 }
 
-// runLogPipeline supervises the log pipeline. pipeline.Run returns nil only on shutdown
-// (ctx cancelled) and non-nil when tail setup fails, so a setup failure is retried rather than
-// permanently and silently disabling log collection while the other streams keep flowing.
+// pipeline.Run returns nil only on shutdown, so an error means tail setup failed and is retried.
 func runLogPipeline(ctx context.Context, pipeline *logs.Pipeline, logger *slog.Logger) {
 	for {
 		if err := pipeline.Run(ctx); err != nil {
