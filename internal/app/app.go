@@ -93,7 +93,7 @@ func startLogPipeline(
 	)
 }
 
-// pipeline.Run returns nil only on shutdown, so an error means tail setup failed and is retried.
+// runLogPipeline runs the log pipeline until shutdown, retrying if tail setup fails.
 func runLogPipeline(ctx context.Context, pipeline *logs.Pipeline, logger *slog.Logger) {
 	for {
 		if err := pipeline.Run(ctx); err != nil {
@@ -121,8 +121,8 @@ func collectAndSendActivity(
 		return err
 	}
 
-	if reportErr := bc.ReportActivity(ctx, collectedAt, snapshots); reportErr != nil {
-		return reportErr
+	if err := bc.ReportActivity(ctx, collectedAt, snapshots); err != nil {
+		return err
 	}
 
 	return nil
@@ -171,8 +171,8 @@ func collectAndSendHealth(
 		return err
 	}
 
-	if reportErr := bc.ReportHealth(ctx, collectedAt, databases); reportErr != nil {
-		return reportErr
+	if err := bc.ReportHealth(ctx, collectedAt, databases); err != nil {
+		return err
 	}
 
 	return nil

@@ -91,7 +91,6 @@ func TestActivitySnapshotsToProto(t *testing.T) {
 	}
 }
 
-// Nil optionals deref to their zero value, and absent timestamps map to nil, not epoch 0.
 func TestActivitySnapshotsToProtoNilOptionals(t *testing.T) {
 	t.Parallel()
 

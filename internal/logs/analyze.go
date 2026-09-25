@@ -11,10 +11,11 @@ type classification = querysheriffv1.LogEvent_LogClassification
 
 const classUnspecified = querysheriffv1.LogEvent_LOG_CLASSIFICATION_UNSPECIFIED
 
-// e.g. "2026-06-14 12:00:00.123 UTC".
+// Matches PostgreSQL log timestamps, e.g. "2026-06-14 12:00:00.123 UTC".
 const postgresLogTimestamp = `(\d+-\d+-\d+ \d+:\d+:\d+(?:\.\d+)?(?:[\d:+-]+| \w+))`
 
-// A cheap prefix check plus an optional capture regexp; a nil regexp classifies on the prefix alone.
+// match first filters by one of the known message prefixes, then optionally
+// applies a regexp to confirm the match and capture fields used by the rule.
 type match struct {
 	prefixes []string
 	re       *regexp.Regexp

@@ -33,12 +33,12 @@ func Load(path string) (Config, error) {
 	}
 
 	var cfg Config
-	if parseErr := yaml.UnmarshalWithOptions(data, &cfg, yaml.Strict()); parseErr != nil {
-		return Config{}, fmt.Errorf("parse config %q: %w", path, parseErr)
+	if err := yaml.UnmarshalWithOptions(data, &cfg, yaml.Strict()); err != nil {
+		return Config{}, fmt.Errorf("parse config %q: %w", path, err)
 	}
 
-	if validateErr := cfg.Validate(); validateErr != nil {
-		return Config{}, fmt.Errorf("invalid config %q: %w", path, validateErr)
+	if err := cfg.Validate(); err != nil {
+		return Config{}, fmt.Errorf("invalid config %q: %w", path, err)
 	}
 
 	return cfg, nil

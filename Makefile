@@ -41,12 +41,12 @@ test:
 run:
 	go run ./cmd/collector
 
-.PHONY: dev-postgres-up
-dev-postgres-up:
+.PHONY: dev-up
+dev-up:
 	$(COMPOSE) up -d --wait
 
-.PHONY: dev-postgres-down
-dev-postgres-down:
+.PHONY: dev-down
+dev-down:
 	$(COMPOSE) down -v
 
 .PHONY: dev
@@ -65,7 +65,7 @@ deb: build-linux
 docker:
 	docker build --build-arg VERSION=$(VERSION) -t $(IMAGE):$(VERSION) .
 
-# Usage: `make release VERSION=0.1.0`.
+# Usage: `make release VERSION=0.0.1`.
 # Validates -> pushes -> fires .github/workflows/release.yml -> builds the .deb -> publishes to GitHub Release.
 .PHONY: release
 release:
