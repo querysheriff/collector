@@ -1,5 +1,7 @@
 GOLANGCI := go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 NFPM := go run github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.44.0
+BUF := go run github.com/bufbuild/buf/cmd/buf@v1.70.0
+SCHEMA_URL ?= http://localhost:3000/schema.zip
 
 COMPOSE := docker compose -f dev/docker-compose.yml
 
@@ -30,7 +32,7 @@ tidy:
 
 .PHONY: proto-update
 proto-update:
-	GOPRIVATE=buf.build go get buf.build/gen/go/querysheriff/backend/connectrpc/go@latest
+	$(BUF) generate $(SCHEMA_URL)
 	$(MAKE) tidy
 
 .PHONY: test

@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	querysheriffv1 "buf.build/gen/go/querysheriff/backend/protocolbuffers/go/querysheriff/v1"
+	querysheriffv1 "github.com/querysheriff/collector/gen/querysheriff/v1"
 )
 
 type classification = querysheriffv1.LogEvent_LogClassification

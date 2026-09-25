@@ -3,7 +3,7 @@ package logs_test
 import (
 	"testing"
 
-	querysheriffv1 "buf.build/gen/go/querysheriff/backend/protocolbuffers/go/querysheriff/v1"
+	querysheriffv1 "github.com/querysheriff/collector/gen/querysheriff/v1"
 
 	"github.com/querysheriff/collector/internal/logs"
 )

@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"time"
 
-	"buf.build/gen/go/querysheriff/backend/connectrpc/go/querysheriff/v1/querysheriffv1connect"
-	querysheriffv1 "buf.build/gen/go/querysheriff/backend/protocolbuffers/go/querysheriff/v1"
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	querysheriffv1 "github.com/querysheriff/collector/gen/querysheriff/v1"
+	"github.com/querysheriff/collector/gen/querysheriff/v1/querysheriffv1connect"
 
 	"github.com/querysheriff/collector/internal/config"
 	"github.com/querysheriff/collector/internal/logs"
