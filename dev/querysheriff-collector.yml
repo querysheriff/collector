@@ -1,6 +1,6 @@
 backend:
   url: http://localhost:3000/api
-  token: qsc_402MUek5w0PjR8fggjJdaDO2ug7
+  token: qsc_replace-me
 
 postgres: postgresql://querysheriff_collector:querysheriff_collector@localhost:5432/postgres
 
