@@ -21,6 +21,7 @@ check:
 .PHONY: lint
 lint:
 	$(GOLANGCI) run -c .golangci.yml
+	$(GOLANGCI) run -c .golangci.yml --build-tags=integration
 
 .PHONY: fmt
 fmt:
@@ -37,6 +38,10 @@ proto-update:
 
 .PHONY: test
 test:
+	go test -tags=integration -p 1 ./...
+
+.PHONY: test-unit
+test-unit:
 	go test ./...
 
 .PHONY: run

@@ -21,7 +21,23 @@ const (
 	logPipelineRetryInterval = 10 * time.Second
 )
 
-func Run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
+type Intervals struct {
+	Activity   time.Duration
+	Statements time.Duration
+	Logs       time.Duration
+	Health     time.Duration
+}
+
+func DefaultIntervals() Intervals {
+	return Intervals{
+		Activity:   activityInterval,
+		Statements: statementsInterval,
+		Logs:       logsInterval,
+		Health:     healthInterval,
+	}
+}
+
+func Run(ctx context.Context, cfg config.Config, intervals Intervals, logger *slog.Logger) error {
 	pg, err := postgres.Connect(ctx, cfg.Postgres)
 	if err != nil {
 		return err
@@ -36,21 +52,21 @@ func Run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 
 	var wg sync.WaitGroup
 	if cfg.Logs.Path != "" {
-		startLogPipeline(ctx, &wg, cfg, bc, logger, pg)
+		startLogPipeline(ctx, &wg, cfg, intervals.Logs, bc, logger, pg)
 	}
 
 	var sched schedule.Scheduler
-	sched.Add(activityInterval, func(ctx context.Context, now time.Time) {
+	sched.Add(intervals.Activity, func(ctx context.Context, now time.Time) {
 		if err := collectAndSendActivity(ctx, bc, pg, now); err != nil {
 			logger.Error("activity snapshot failed", "error", err)
 		}
 	})
-	sched.Add(statementsInterval, func(ctx context.Context, now time.Time) {
+	sched.Add(intervals.Statements, func(ctx context.Context, now time.Time) {
 		if err := collectAndSendStatements(ctx, bc, pg, now); err != nil {
 			logger.Error("statement delta failed", "error", err)
 		}
 	})
-	sched.Add(healthInterval, func(ctx context.Context, now time.Time) {
+	sched.Add(intervals.Health, func(ctx context.Context, now time.Time) {
 		if err := collectAndSendHealth(ctx, bc, pg, now); err != nil {
 			logger.Error("health check failed", "error", err)
 		}
@@ -67,6 +83,7 @@ func startLogPipeline(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	cfg config.Config,
+	pollInterval time.Duration,
 	bc *backend.Client,
 	logger *slog.Logger,
 	pg *postgres.Client,
@@ -78,7 +95,7 @@ func startLogPipeline(
 			DeleteRotatedJSONOnly: cfg.Logs.DeleteRotatedJSONOnly,
 			LogFilename:           pg.LogFilename,
 			Path:                  cfg.Logs.Path,
-			PollInterval:          logsInterval,
+			PollInterval:          pollInterval,
 		},
 		logger,
 		bc,
