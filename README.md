@@ -1,101 +1,83 @@
-# QuerySheriff collector
+<p align="center">
+  <img src="https://raw.githubusercontent.com/querysheriff/frontend/master/static/logo.svg" alt="QuerySheriff logo" width="96">
+</p>
 
-The collector is a Go agent that runs next to a PostgreSQL server. It samples `pg_stat_activity`, `pg_locks` and `pg_stat_statements`, tails the server's jsonlog, and sends the results to the [QuerySheriff backend](https://github.com/querysheriff/backend) over Connect RPC.
+<h1 align="center">QuerySheriff collector</h1>
 
-It supports self-managed PostgreSQL 15 to 18 and ships two ways: as a Debian package (Debian 11 to 13, amd64) that runs under systemd, and as a container image for running as a sidecar next to a containerized PostgreSQL. Installation is covered in the [deployment guide](https://github.com/querysheriff/docs#6-install-the-collector); this README is about working on the code.
+<p align="center">Go agent that runs on a PostgreSQL server and sends its stats and logs to the backend</p>
 
-## Requirements
+<p align="center">
+  <a href="https://github.com/querysheriff/docs/blob/master/deployment.md#6-install-the-collector">Install</a> ·
+  <a href="#configuration">Configuration</a> ·
+  <a href="#development">Development</a> ·
+  <a href="https://github.com/querysheriff/docs">Docs</a>
+</p>
 
-- Go 1.26.3
-- Docker with Compose, for the dev database and the integration tests
+The collector is the part of QuerySheriff that touches your database. It reads PostgreSQL's statistics views and follows its jsonlog, then pushes everything to the [backend](https://github.com/querysheriff/backend) over Connect RPC. It needs only the `pg_monitor` role and read access to the log directory. In production it typically uses about 30 MiB of memory and 0.5% of one CPU core.
 
-golangci-lint, buf and nfpm are pinned in the `Makefile` and run through `go run`. Nothing else needs installing.
+| Every | It sends |
+| --- | --- |
+| 1 second | Sessions from `pg_stat_activity` with a transaction open over a second or waiting on a lock, each with its most direct blocker |
+| 10 seconds | New log lines, classified by message, with slow query samples and `auto_explain` plans pulled out of them |
+| 1 minute | Per-query deltas from `pg_stat_statements` |
+| 1 minute | A heartbeat with the server's database list |
 
-## Local development
+It supports self-managed PostgreSQL 15 to 18. Nothing is kept on disk: after a restart the collector reads the log from its current end and starts a fresh statistics baseline.
+
+## Install
+
+On Debian 11 to 13 (amd64), this installs the latest release as a systemd service:
 
 ```sh
-make dev-up     # PostgreSQL 17 on :5432 and Adminer on :8080
-make dev        # run the collector with dev/querysheriff-collector.yml
-make dev-down   # stop the containers and delete the data volume
+curl -fsSL https://raw.githubusercontent.com/querysheriff/collector/master/scripts/install.sh | sudo sh
 ```
 
-The dev PostgreSQL is set up like a monitored server: `pg_stat_statements` and `auto_explain` are preloaded and jsonlog is written to `dev/logs/`, which the dev config tails. `dev/init.sql` creates the `querysheriff_collector` role and an empty `demo` database to run queries in. Activity is only reported for transactions open longer than a second, so `SELECT pg_sleep(2)` is a quick way to see one.
-
-The dev config sends to a backend at `http://localhost:3000/api` with the placeholder token `qsc_replace-me`. Collection works without a backend; every rejected report is logged. To send real data, put a token created under Admin > Collectors in the dashboard into `dev/querysheriff-collector.yml`.
-
-The backend's dev stack publishes the same host ports (5432 and 8080), so only one of the two stacks can run at a time.
+For PostgreSQL in Kubernetes, run the `ghcr.io/querysheriff/collector` image as a sidecar instead. The [deployment guide](https://github.com/querysheriff/docs/blob/master/deployment.md#6-install-the-collector) covers both, plus the PostgreSQL settings the collector needs.
 
 ## Configuration
 
-The collector reads one YAML file, `/etc/querysheriff-collector.yml` unless `-config` says otherwise. Unknown keys are an error.
+The collector reads one YAML file, `/etc/querysheriff-collector.yml` by default, and rejects unknown keys.
 
-| Key | Required | Description |
-| --- | --- | --- |
-| `backend.url` | yes | Backend API URL including the `/api` prefix. `http` or `https`. |
-| `backend.token` | yes | Collector token (`qsc_...`) created in the dashboard. The backend also uses it to tell which server the data comes from. |
-| `postgres` | yes | Connection string for the monitored server, as a URL or a key/value DSN. |
-| `logs.path` | no | Directory that holds the jsonlog files. Empty turns log collection off. |
-| `logs.delete_rotated` | no | Delete rotated log files that match the server's `log_filename`. Default `false`. |
-| `logs.delete_rotated_json_only` | no | With `delete_rotated`, delete only the `.json` files and leave the `.log` files to another tool. Default `false`. |
+```yaml
+backend:
+  url: https://querysheriff.example.com/api
+  token: qsc_CHANGE_ME   # created under Admin > Collectors in the dashboard
 
-[`packaging/querysheriff-collector.yml.example`](packaging/querysheriff-collector.yml.example) is the commented config the Debian package installs.
+postgres: postgresql://querysheriff_collector:CHANGE_ME@localhost:5432/postgres
 
-| Flag | Description |
-| --- | --- |
-| `-config <path>` | Config file. Default `/etc/querysheriff-collector.yml`. |
-| `-version` | Print the version and exit. |
-
-Collection intervals are fixed in `internal/app/app.go`: activity every second, logs every 10 seconds, statements and the health heartbeat every minute.
-
-## Project structure
-
-```
-cmd/collector/      entry point: flags, config, signal handling
-internal/           application code, see the table below
-gen/                Go code generated from the backend's proto schema
-dev/                Compose file, init SQL and config for local runs
-packaging/          nfpm config, systemd unit, maintainer scripts, example config
-scripts/install.sh  installs the latest release .deb on a Debian host
-Dockerfile          distroless image used for the sidecar
+logs:
+  path: /var/log/postgresql   # the server's log_directory; omit the block to skip logs
+  delete_rotated: true        # delete rotated files that match log_filename
 ```
 
-| Package | Responsibility |
-| --- | --- |
-| `internal/app` | Connects to PostgreSQL and rejects unsupported versions. Runs activity, statement and health collection on separate goroutines so a slow one never delays the others, and restarts the log pipeline when it fails. |
-| `internal/postgres` | Queries against the stats views. Activity joins `pg_stat_activity` with ungranted locks and `pg_blocking_pids()`, and keeps client backends whose transaction has been open for over a second or that wait on a lock. Statements keeps the previous `pg_stat_statements` snapshot in memory and returns deltas; the first collection after a start or a stats reset only sets the baseline. |
-| `internal/logs` | Follows the newest `.json` file in `logs.path`, parses jsonlog records, classifies messages, and extracts statement samples from `log_min_duration_statement` and `auto_explain` output. Files are read from the end, so a restart never resends old lines and lines written while the collector was down are skipped. QuerySheriff's own log records are collected too, but suspended for a while if they burst. The classification rules and sample parsing are adapted from pganalyze-collector. |
-| `internal/backend` | Connect client for `ActivityService`, `StatementService`, `LogService` and `HealthService`, with the mapping from internal structs to protobuf. |
-| `internal/schedule` | Ticks aligned to the wall clock. A task never overlaps itself, and ticks missed during a long run merge into the next one. |
-| `internal/config` | YAML loading and validation. |
-| `internal/testdb` | PostgreSQL 15 and 17 test containers with the jsonlog directory mounted on the host. |
+The token also tells the backend which server the data belongs to. `logs.delete_rotated_json_only: true` limits deletion to `.json` files. The commented reference is [`packaging/querysheriff-collector.yml.example`](packaging/querysheriff-collector.yml.example).
 
-## Commands
+## Development
 
-| Command | Description |
-| --- | --- |
-| `make dev-up` / `make dev-down` | Start or remove the dev PostgreSQL and Adminer. |
-| `make dev` | Run against `dev/querysheriff-collector.yml`. |
-| `go run ./cmd/collector -config <path>` | Run with another config. |
-| `go build ./cmd/collector` | Build for the current platform. |
-| `make build-linux` | Build a static linux/amd64 binary into `dist/`. |
-| `make test-unit` | Unit tests. |
-| `make test` | Unit and integration tests. The integration tests run the whole collector against PostgreSQL 15 and 17 in Docker and a fake backend. |
-| `make fmt` | Format the code with golangci-lint. |
-| `make lint` | golangci-lint, with and without the `integration` build tag. |
-| `make tidy` | `go mod tidy`. |
-| `make check` | `fmt`, `tidy`, `lint` and `test`. Run it before you push. |
-| `make proto-update` | Regenerate `gen/` from a backend running on `localhost:3000`. |
-
-To run a single test:
+Requires Go 1.26.3 and Docker. Linters and generators are pinned in the `Makefile` and run through `go run`.
 
 ```sh
-go test ./internal/logs/ -run TestTailDirectorySwitchesToWrittenFile -v -count=1
+make dev-up   # PostgreSQL 17 with pg_stat_statements, auto_explain and jsonlog into dev/logs
+make dev      # run the collector with dev/querysheriff-collector.yml
 ```
 
-## Wire schema
+```console
+time=… level=INFO msg="querysheriff collector started" postgres_version_num=170010
+time=… level=INFO msg="log collection started" path=dev/logs
+```
 
-`gen/` is generated from the proto files that the backend serves at `/schema.zip`; never edit it by hand. A schema change starts in [backend](https://github.com/querysheriff/backend#changing-the-wire-schema). Run that backend locally, then `make proto-update` here and commit `gen/`.
+Reports fail and get logged until `dev/querysheriff-collector.yml` has a real token from a running backend. The backend's dev stack uses the same ports (5432 and 8080), so stop one before starting the other. `make dev-down` removes the dev database.
 
-## Further reading
+| Command | What it does |
+| --- | --- |
+| `make test-unit` | Unit tests |
+| `make test` | Unit and integration tests, against PostgreSQL 15 and 17 in Docker |
+| `make lint` / `make fmt` | golangci-lint check / format |
+| `make check` | `fmt`, `tidy`, `lint` and `test` |
+| `make proto-update` | Regenerate `gen/` from a backend running on `localhost:3000` |
 
-- [Deployment guide](https://github.com/querysheriff/docs): PostgreSQL settings, installation, sidecar setup, troubleshooting
+`gen/` is generated from the backend's proto schema and never edited by hand. The log classification rules and sample parsing are adapted from [pganalyze-collector](https://github.com/pganalyze/collector).
+
+## Learn more
+
+The [deployment guide](https://github.com/querysheriff/docs/blob/master/deployment.md) covers PostgreSQL settings, installation, the sidecar setup and troubleshooting.
